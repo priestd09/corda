@@ -6,6 +6,7 @@ import net.corda.contracts.asset.Cash
 import net.corda.contracts.asset.DUMMY_CASH_ISSUER
 import net.corda.contracts.asset.DUMMY_CASH_ISSUER_KEY
 import net.corda.core.contracts.*
+import net.corda.core.crypto.AnonymousParty
 import net.corda.core.crypto.CompositeKey
 import net.corda.core.identity.Party
 import net.corda.core.node.ServiceHub
@@ -21,13 +22,13 @@ import java.util.*
 @JvmOverloads
 fun ServiceHub.fillWithSomeTestDeals(dealIds: List<String>,
                                      revisions: Int? = 0,
-                                     participants: List<PublicKey> = emptyList()) : Vault<DealState> {
+                                     parties: List<AnonymousParty> = emptyList()) : Vault<DealState> {
     val freshKey = keyManagementService.freshKey()
 
     val transactions: List<SignedTransaction> = dealIds.map {
         // Issue a deal state
         val dummyIssue = TransactionType.General.Builder(notary = DUMMY_NOTARY).apply {
-            addOutputState(DummyDealContract.State(ref = it, participants = participants.plus(freshKey.public)))
+            addOutputState(DummyDealContract.State(ref = it, parties = parties))
             signWith(freshKey)
             signWith(DUMMY_NOTARY_KEY)
         }

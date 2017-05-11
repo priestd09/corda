@@ -111,7 +111,7 @@ class Vault<out T : ContractState>(val states: Iterable<StateAndRef<T>>) {
     data class Page<out T : ContractState>(val states: List<StateAndRef<T>>,
                                            val statesMetadata: List<Vault.StateMetadata>,
                                            val pageable: PageSpecification,
-                                           val totalStatesAvailable: Long)
+                                           val totalStatesAvailable: Int)
 
     @CordaSerializable
     data class StateMetadata(val ref: StateRef,
