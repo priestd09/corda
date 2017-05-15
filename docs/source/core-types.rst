@@ -13,7 +13,7 @@ If the state ref has been looked up from storage, you will have a ``StateAndRef`
 
 The ``ContractState`` type is an interface that all states must implement. A ``TransactionState`` is a simple
 container for a ``ContractState`` (the custom data used by a contract program) and additional platform-level state
-information, such as the *notary* pointer (see :doc:`key-concepts-consensus-notaries`).
+information, such as the *notary* pointer (see :doc:`key-concepts-consensus`).
 
 A number of interfaces then extend ``ContractState``, representing standardised functionality for common kinds
 of state such as:
@@ -58,7 +58,7 @@ can be signed once its construction is complete. This builder class should be us
 Then once the states and commands are right, this class can be used as a holding bucket to gather signatures from multiple parties.
 It is typical for contract classes to expose helper methods that can contribute to a ``TransactionBuilder``. Once a transaction
 has been constructed using the builders ``toWireTransaction`` or ``toSignedTransaction`` function, it shared with other
-participants using the :doc:`key-concepts-flow-framework`.
+participants using the :doc:`key-concepts-flows`.
 
 Here's an example of building a transaction that creates an issuance of bananas (note that bananas are not a real
 contract type in the library):

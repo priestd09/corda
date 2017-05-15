@@ -38,7 +38,7 @@ Documentation Contents:
 =======================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Getting started
 
    getting-set-up
@@ -51,21 +51,20 @@ Documentation Contents:
    cheat-sheet
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Key concepts
 
    key-concepts
    key-concepts-ecosystem
    key-concepts-data-model
-   key-concepts-core-types
-   key-concepts-financial-model
-   key-concepts-flow-framework
-   key-concepts-consensus-notaries
-   key-concepts-vault
-   key-concepts-security-model
+   key-concepts-states
+   key-concepts-transactions
+   key-concepts-contracts
+   key-concepts-flows
+   key-concepts-consensus
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: CorDapps
 
    creating-a-cordapp
@@ -73,9 +72,10 @@ Documentation Contents:
    secure-coding-guidelines
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: The Corda node
 
+   vault
    versioning
    shell
    serialization
@@ -90,7 +90,7 @@ Documentation Contents:
    out-of-process-verification
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Tutorials
 
    tutorial-contract
@@ -109,7 +109,7 @@ Documentation Contents:
    event-scheduling
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Other
 
    network-simulator
@@ -118,15 +118,17 @@ Documentation Contents:
    json
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Component library
 
    flow-library
    contract-catalogue
    contract-irs
+   core-types
+   financial-model
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Release process
 
    release-process
@@ -136,7 +138,7 @@ Documentation Contents:
    codestyle
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Appendix
 
    loadtesting
@@ -146,7 +148,7 @@ Documentation Contents:
    azure-vm
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Glossary
 
    glossary
