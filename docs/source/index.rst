@@ -43,6 +43,7 @@ Documentation Contents:
 
    getting-set-up
    getting-set-up-fault-finding
+   faq
    tutorial-cordapp
    inthebox
    running-the-demos
