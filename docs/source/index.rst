@@ -41,9 +41,10 @@ Documentation Contents:
    :maxdepth: 2
    :caption: Getting started
 
-   inthebox
    getting-set-up
    getting-set-up-fault-finding
+   tutorial-cordapp
+   inthebox
    running-the-demos
    CLI-vs-IDE
    cheat-sheet
@@ -67,7 +68,8 @@ Documentation Contents:
    :caption: CorDapps
 
    creating-a-cordapp
-   tutorial-cordapp
+   corda-plugins
+   secure-coding-guidelines
 
 .. toctree::
    :maxdepth: 2
@@ -81,10 +83,10 @@ Documentation Contents:
    persistence
    node-administration
    corda-configuration-file
-   corda-plugins
    node-services
    node-explorer
    permissioning
+   out-of-process-verification
 
 .. toctree::
    :maxdepth: 2
@@ -124,21 +126,23 @@ Documentation Contents:
 
 .. toctree::
    :maxdepth: 2
+   :caption: Release process
+
+   release-process
+   release-notes
+   changelog
+   publishing-corda
+   codestyle
+
+.. toctree::
+   :maxdepth: 2
    :caption: Appendix
 
    loadtesting
    demobench
    setting-up-a-corda-network
-   secure-coding-guidelines
-   release-process
-   release-notes
-   changelog
-   codestyle
    building-the-docs
-   further-notes-on-kotlin
-   publishing-corda
    azure-vm
-   out-of-process-verification
 
 .. toctree::
    :maxdepth: 2

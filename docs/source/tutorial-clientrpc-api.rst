@@ -1,7 +1,7 @@
 .. _graphstream: http://graphstream-project.org/
 
-Client RPC API tutorial
-=======================
+Using the client RPC API
+========================
 
 In this tutorial we will build a simple command line utility that connects to a node, creates some Cash transactions and
 meanwhile dumps the transaction graph to the standard output. We will then put some simple visualisation on top. For an

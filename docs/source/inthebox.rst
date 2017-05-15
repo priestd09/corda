@@ -1,7 +1,7 @@
-What's included?
-================
+The Corda repository
+====================
 
-This Corda early access preview includes:
+The main Corda repository is available from `GitHub <https://github.com/corda/corda>`_. Currently, it includes:
 
 * A collection of samples, for instance a web app demo that uses it to implement IRS trading.
 * A template app you can use to get started, and tutorial app that teaches you the basics.
@@ -21,9 +21,9 @@ Some things it does not currently include but should gain later are:
 * An identity framework.
 
 The open source version of Corda is designed for developers exploring how to write apps. It is not intended to
-be production grade software. For example it uses an embedded SQL database and doesn't yet have connectivity
-support for mainstream SQL vendors (Oracle, Postgres, MySQL, SQL Server etc). It hasn't been security audited
-and the APIs change in every release.
+be production grade software. For example, it uses an embedded SQL database and doesn't yet have connectivity
+support for mainstream SQL vendors (Oracle, Postgres, MySQL, SQL Server, etc.). It hasn't been security audited
+and the APIs may change in every Milestone release.
 
 Source tree layout
 ------------------

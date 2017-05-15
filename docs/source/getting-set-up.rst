@@ -18,9 +18,7 @@ If you do choose to use OpenJDK instead of Oracle's JDK, you will also need to i
 Kotlin
 ~~~~~~
 
-Applications on Corda (CorDapps) can be written in any JVM-targeting language. However, Corda itself and most of the samples are written in Kotlin. If you're unfamiliar with Kotlin, there is an official `getting started guide <https://kotlinlang.org/docs/tutorials/>`_.
-
-See also our :doc:`further-notes-on-kotlin`.
+Applications on Corda (CorDapps) can be written in any JVM-targeting language. However, Corda itself and most of the samples are written in Kotlin. If you're unfamiliar with Kotlin, there is an official `getting started guide <https://kotlinlang.org/docs/tutorials/>`_. You can read more about why Kotlin is a potentially strong successor to Java `here <https://medium.com/@octskyward/why-kotlin-is-my-next-programming-language-c25c001e26e3>`_.
 
 IDE
 ~~~
