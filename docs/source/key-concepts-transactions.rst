@@ -1,82 +1,89 @@
 Transactions
 ============
 
-Transactions are used to update the ledger by consuming existing state objects and producing new state objects.
+Transactions are used to update the ledger by consuming zero or more existing ledger states (the *inputs*) and
+producing zero or more new ledger states (the *outputs*). They represent a single link in the state sequences of the
+previous section.
 
-A transaction update is accepted according to the following two aspects of consensus:
+Issuances (transactions with zero inputs) and exits (transactions with zero outputs) are not special transaction
+types in Corda, and can be proposed by any node. Similarly, transactions can use any combination of input and output
+state types (e.g. a transaction involving both cash states and bond states).
 
-   #. Transaction validity: parties can ensure that the proposed transaction and all its ancestors are valid
-      by checking that the associated contract code runs successfully and has all the required signatures
-   #. Transaction uniqueness: parties can ensure there exists no other transaction, over which we have previously reached
-      consensus (validity and uniqueness), that consumes any of the same states. This is the responsibility of a notary service.
+Transactions are *atomic* - either all the transaction's proposed changes are accepted, or none are. There is no
+situation in which only some of the changes proposed by a given transaction are accepted.
 
-Beyond inputs and outputs, transactions may also contain **commands**, small data packets that
-the platform does not interpret itself but which parameterise execution of the contracts. They can be thought of as
-arguments to the verify function. Each command has a list of **composite keys** associated with it. The platform ensures
-that the transaction has signatures matching every key listed in the commands before the contracts start to execute. Thus, a verify
-function can trust that all listed keys have signed the transaction, but is responsible for verifying that any keys required
-for the transaction to be valid from the verify function's perspective are included in the list. Public keys
-may be random/identityless for privacy, or linked to a well known legal identity, for example via a
-*public key infrastructure* (PKI).
+Committing transactions
+-----------------------
+Initially, a transaction is just a **proposal** to update the ledger. It represents the future state of the ledger
+that is desired by the transaction builder(s).
 
-.. note:: Linkage of keys with identities via a PKI is only partially implemented in the current code.
+For the changes proposed by the transaction to become fact, the transaction must be committed. A transaction is
+committed if it satisfies the following two conditions:
 
-Commands are always embedded inside a transaction. Sometimes, there's a larger piece of data that can be reused across
-many different transactions. For this use case, we have **attachments**. Every transaction can refer to zero or more
-attachments by hash. Attachments are always ZIP/JAR files, which may contain arbitrary content. These files are
-then exposed on the classpath and so can be opened by contract code in the same manner as any JAR resources
-would be loaded.
+   * **Transaction validity**: For both the proposed transaction, and every single past transaction in the chain of
+     transactions that led up to the creation of the current proposed transaction's inputs:
+       * The transaction is digitally signed by all the required parties
+       * The transaction is *contractually valid* (we'll examine this condition in the next section on
+         :doc:`key-concepts-contracts`)
+   * **Transaction uniqueness**: There exists no other committed transaction that consumes any of the same inputs as
+     our proposed transaction (we'll examine this condition in the section on :doc:`key-concepts-consensus`)
 
-Note that there is nothing that explicitly binds together specific inputs, outputs, commands or attachments. Instead,
-it's up to the contract code to interpret the pieces inside the transaction and ensure they fit together correctly. This
-is done to maximise flexibility for the contract developer.
+If both of these conditions are satisfied, the transaction becomes committed, meaning that:
 
-Transactions may sometimes need to provide a contract with data from the outside world. Examples may include stock
-prices, facts about events or the statuses of legal entities (e.g. bankruptcy), and so on. The providers of such
-facts are called **oracles** and they provide facts to the ledger by signing transactions that contain commands they
-recognise, or by creating signed attachments. The commands contain the fact and the signature shows agreement to that fact.
+* The transaction's inputs are marked as historic, and cannot be used in any future transactions
+* The transaction's outputs become part of the current state of the ledger
 
-Time is also modelled as a fact and represented as a **timestamping command** placed inside the transaction. This specifies a
-time window in which the transaction is considered valid for notarisation. The time window can be open ended (i.e. with a start but no end or vice versa).
-In this way transactions can be linked to the notary's clock.
-
-It is possible for a single Corda network to have multiple competing notaries. A new (output) state is tied to a specific
-notary when it is created. Transactions can only consume (input) states that are all associated with the same notary.
-A special type of transaction is provided that can move a state (or set of states) from one notary to another.
-
-.. note:: Currently the platform code will not automatically re-assign states to a single notary. This is a future planned feature.
-
-Transaction Validation
-^^^^^^^^^^^^^^^^^^^^^^
-When a transaction is presented to a node as part of a flow it may need to be checked. Checking original transaction validity is
-the responsibility of the ``ResolveTransactions`` flow. This flow performs a breadth-first search over the transaction graph,
-downloading any missing transactions into local storage and validating them. The search bottoms out at transactions without inputs
-(eg. these are mostly created from issuance transactions). A transaction is not considered valid if any of its transitive dependencies are invalid.
-
-.. note:: Non-validating notaries assume transaction validity and do not request transaction data or their dependencies
-beyond the list of states consumed.
-
-The tutorial ":doc:`tutorial-contract`" provides a hand-ons walk-through using these concepts.
-
-Transaction Representation
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-By default, all transaction data (input and output states, commands, attachments) is visible to all participants in
-a multi-party, multi-flow business workflow. :doc:`merkle-trees` describes how Corda uses Merkle trees to
-ensure data integrity and hiding of sensitive data within a transaction that shouldn't be visible in its entirety to all
-participants (eg. oracles nodes providing facts).
-
-FROM THE SECURITY MODEL PAGE
+Other transaction components
 ----------------------------
-Privacy techniques
+As well as input states and output states, transactions may contain:
 
-* Partial data visibility: transactions are not globally broadcast as in many other systems.
-* Transaction tear-offs: Transactions are structured as Merkle trees, and may have individual subcomponents be revealed to parties who already know the Merkle root hash. Additionally, they may sign the transaction without being able to see all of it.
+* Commands
+* Attachments
+* Timestamps
 
-    See :doc:`merkle-trees` for further detail.
+Commands
+^^^^^^^^
+Suppose we have a transaction with a cash state and a bond state as inputs, and a cash state and a bond state as
+outputs. This transaction could represent several scenarios:
 
-* Multi-signature support: Corda uses composite keys to support scenarios where more than one key or party is required to authorise a state object transition.
+* A bond purchase
+* A coupon payment on a bond
 
-.. note:: Future privacy techniques will include key randomisation, graph pruning, deterministic JVM sandboxing and support for secure signing devices.
-See sections 10 and 13 of the `Technical white paper`_ for detailed descriptions of these techniques and features.
+Clearly, the rules for contractual validity are different in these scenarios. For example, in the former, we would
+require a change in the bond's current owner; in the latter, the bond would not change ownership.
 
-.. _`Technical white paper`: _static/corda-technical-whitepaper.pdf
+*Commands* allow us to indicate the intent of a transaction, affecting how contractual validity is checked.
+
+Each command is also associated with a list of one or more *signers*. To be valid, a transaction must be signed by
+every party listed in the transaction's commands. Returning to our earlier example, we might imagine that:
+
+* In a bond purchase, the owner of the cash and the owner of the bond are required to sign
+* In a coupon payment on a bond, only the payer of the coupon is required to sign
+
+Attachments
+^^^^^^^^^^^
+Sometimes, there's a larger piece of data that can be reused across many different transactions (e.g. a calendar of
+public holidays). For this use case, we have *attachments*. Every transaction can refer to zero or more attachments
+by hash.
+
+Attachments are always ZIP/JAR files, which may contain arbitrary content. The information in these files can then be
+used when checking the transaction for contractual validity.
+
+Timestamps
+^^^^^^^^^^
+A *timestamp* specifies the time window within which the transaction can be committed. We discuss timestamps in the
+section on :doc:`key-concepts-consensus`
+
+Privacy maximization
+--------------------
+Corda aims to maximize privacy. To do so, it implements various techniques to minimize the amount of data seen during
+transaction validation:
+
+* **Controlled data distribution**: Transactions are **only broadcast** to the relevant parties, and third-parties do not
+  perform transaction validation
+* **Transaction tear-offs**: Transactions are structured such that they can be digitally signed without disclosing the
+  entirety of the transaction's contents, using something called Merkle trees. You can read more about this technique
+  in :doc:`merkle-trees`.
+* **Key randomisation**: The parties to a transaction are identified only by their public keys, and fresh keypairs are
+  generated for each transaction. As a result, an onlooker cannot identify which parties were involved in a given
+  transaction.
