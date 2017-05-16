@@ -5,6 +5,10 @@ Transactions are used to update the ledger by consuming zero or more existing le
 producing zero or more new ledger states (the *outputs*). They represent a single link in the state sequences of the
 previous section.
 
+Here is a transaction with two inputs and two outputs:
+
+.. image:: resources/basic-tx.png
+
 Issuances (transactions with zero inputs) and exits (transactions with zero outputs) are not special transaction
 types in Corda, and can be proposed by any node. Similarly, transactions can use any combination of input and output
 state types (e.g. a transaction involving both cash states and bond states).
@@ -40,6 +44,12 @@ As well as input states and output states, transactions may contain:
 * Commands
 * Attachments
 * Timestamps
+
+For example, a transaction paying cash to settle an IOU may look as follows:
+
+.. image:: resources/full-tx.png
+
+We explore the role played by the remaining transaction components below.
 
 Commands
 ^^^^^^^^

@@ -12,6 +12,10 @@ transaction gathers all the required signatures, it is only valid if it is also 
 * A transaction is only valid if the contract of **every input state** and **every output state** considers it to be
   valid
 
+We can picture this situation as follows:
+
+.. image:: resources/tx-validation.png
+
 A transaction that is not contractually valid will not become accepted as part of the ledger. In this way,
 contracts impose rules on the evolution of states over time that are independent of the willingness of individual
 nodes to sign a given transaction.

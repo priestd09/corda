@@ -15,6 +15,10 @@ Messages are encrypted and sent via message queues (using AMQP/1.0 over TLS).
 Corda networks are semi-private. Before joining, nodes must be provisioned with root-authority-signed TLS certificates
 by a permissioning service to certify their identity.
 
+We can visualize a network as follows:
+
+.. image:: resources/network.png
+
 Network services
 ----------------
 
