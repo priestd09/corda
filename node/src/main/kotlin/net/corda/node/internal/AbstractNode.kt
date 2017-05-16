@@ -12,6 +12,7 @@ import net.corda.core.flows.FlowInitiator
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.flows.StartableByRPC
+import net.corda.core.flows.TxKeyFlow
 import net.corda.core.identity.Party
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.messaging.RPCOps
@@ -248,9 +249,9 @@ abstract class AbstractNode(open val configuration: NodeConfiguration,
                     // Add any core flows here
                     listOf(ContractUpgradeFlow::class.java,
                             // TODO Remove all Cash flows from default list once they are split into separate CorDapp.
-                            CashIssueFlow::class.java,
-                            CashExitFlow::class.java,
-                            CashPaymentFlow::class.java)
+                            CashIssueFlow.Initiator::class.java,
+                            CashExitFlow.Initiator::class.java,
+                            CashPaymentFlow.Initiator::class.java)
 
             runOnStop += Runnable { net.stop() }
             _networkMapRegistrationFuture.setFuture(registerWithNetworkMapIfConfigured())
@@ -284,6 +285,7 @@ abstract class AbstractNode(open val configuration: NodeConfiguration,
         installCoreFlow(BroadcastTransactionFlow::class) { otherParty, _ -> NotifyTransactionHandler(otherParty) }
         installCoreFlow(NotaryChangeFlow::class) { otherParty, _ -> NotaryChangeHandler(otherParty) }
         installCoreFlow(ContractUpgradeFlow::class) { otherParty, _ -> ContractUpgradeHandler(otherParty) }
+        installCoreFlow(TxKeyFlow.Requester::class) { otherParty, _ -> TxKeyRequestHandler(otherParty) }
     }
 
     /**

@@ -370,6 +370,11 @@ class MockNetwork(private val networkSendManuallyPumped: Boolean = false,
         repeat(numPartyNodes) {
             nodes += createPartyNode(mapNode.info.address)
         }
+        nodes.forEach { node ->
+            nodes.map { it.info.legalIdentity }.forEach { identity ->
+                node.services.identityService.registerIdentity(identity)
+            }
+        }
         return BasketOfNodes(nodes, notaryNode, mapNode)
     }
 

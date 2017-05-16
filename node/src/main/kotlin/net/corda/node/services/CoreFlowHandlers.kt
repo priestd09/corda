@@ -9,9 +9,11 @@ import net.corda.core.identity.Party
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.TxKeyFlow
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.unwrap
 import net.corda.flows.*
+import java.security.cert.CertPath
 
 /**
  * This class sets up network message handlers for requests from peers for data keyed by hash. It is a piece of simple
@@ -120,5 +122,13 @@ class ContractUpgradeHandler(otherSide: Party) : AbstractStateReplacementFlow.Ac
             "The proposed tx matches the expected tx for this upgrade" using (proposedTx == expectedTx)
         }
         ContractUpgradeFlow.verify(oldStateAndRef.state.data, expectedTx.outRef<ContractState>(0).state.data, expectedTx.commands.single())
+    }
+}
+
+class TxKeyRequestHandler(val otherSide: Party) : FlowLogic<CertPath>() {
+    @Suspendable
+    override fun call(): CertPath {
+        val revocationEnabled = false
+        return subFlow(TxKeyFlow.Provider(otherSide, revocationEnabled))
     }
 }
