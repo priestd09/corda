@@ -67,6 +67,7 @@ Documentation Contents:
    :maxdepth: 1
    :caption: CorDapps
 
+   cordapp-overview
    creating-a-cordapp
    corda-plugins
    secure-coding-guidelines

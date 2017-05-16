@@ -39,15 +39,3 @@ These components are illustrated in the following diagram:
 Where Corda infrastructure services are those which all participants depend upon, such as the network map
 and notaries. Corda services may be deployed by participants, third parties or a central network operator (e.g. R3).
 This diagram is not intended to imply that only a centralised model is supported.
-
-CorDapps
---------
-
-Each node can be customized by installing CorDapps: applications that extend the node to allow it to handle new
-business processes. Examples of CorDapps include asset trading (see :ref:`irs-demo` and :ref:`trader-demo`),
-portfolio valuations (see :ref:`simm-demo`), trade finance, post-trade order matching, KYC/AML, etc.
-
-CorDapps are made up of state, contract and flow definitions (which will be the focus of the following sections), as
-well as any required APIs, vault plugions and UI components.
-
-Nodes may also run standalone Corda applications that provide manageability and tooling support to a Corda network.
