@@ -199,7 +199,7 @@ Binding to the network via a CorDapp plugin
 
 .. note:: Before reading any further, we advise that you understand the concept of flows and how to write them and use
    them. See :doc:`flow-state-machines`.  Likewise some understanding of Cordapps, plugins and services will be helpful.
-   See :doc:`creating-a-cordapp`.
+   See :doc:`running-a-node`.
 
 The first step is to create a service to host the oracle on the network.  Let's see how that's implemented:
 
@@ -211,7 +211,7 @@ The first step is to create a service to host the oracle on the network.  Let's 
 This may look complicated, but really it's made up of some relatively simple elements (in the order they appear in the code):
 
 1. Accept a ``PluginServiceHub`` in the constructor.  This is your interface to the Corda node.
-2. Ensure you extend the abstract class ``SingletonSerializeAsToken`` (see :doc:`corda-plugins`).
+2. Ensure you extend the abstract class ``SingletonSerializeAsToken`` (see :doc:`writing-cordapps`).
 3. Create an instance of your core oracle class that has the ``query`` and ``sign`` methods as discussed above.
 4. Register your client sub-flows (in this case both in ``RatesFixFlow``.  See the next section) for querying and
    signing as initiating your service flows that actually do the querying and signing using your core oracle class instance.
@@ -219,7 +219,7 @@ This may look complicated, but really it's made up of some relatively simple ele
 
 The final step is to register your service with the node via the plugin mechanism. Do this by
 implementing a plugin.  Don't forget the resources file to register it with the ``ServiceLoader`` framework
-(see :doc:`corda-plugins`).
+(see :doc:`writing-cordapps`).
 
 .. sourcecode:: kotlin
 

@@ -68,27 +68,28 @@ Documentation Contents:
    :caption: CorDapps
 
    cordapp-overview
-   creating-a-cordapp
-   corda-plugins
+   writing-cordapps
    secure-coding-guidelines
 
 .. toctree::
    :maxdepth: 1
    :caption: The Corda node
 
+   running-a-node
+   node-services
+   clientrpc
    vault
    versioning
    shell
    serialization
-   clientrpc
    messaging
    persistence
    node-administration
    corda-configuration-file
-   node-services
    node-explorer
    permissioning
    out-of-process-verification
+   setting-up-a-corda-network
 
 .. toctree::
    :maxdepth: 1
@@ -144,7 +145,6 @@ Documentation Contents:
 
    loadtesting
    demobench
-   setting-up-a-corda-network
    building-the-docs
    azure-vm
 

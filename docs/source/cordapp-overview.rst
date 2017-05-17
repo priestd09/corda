@@ -2,24 +2,23 @@ CorDapp overview
 ================
 
 Corda is a platform. Its functionality is extended by developers through the creation of Corda distributed
-applications (CorDapps).
+applications (CorDapps). CorDapps are not installed on the network itself, but on the individual nodes instead.
 
-These CorDapps are not installed on the network itself. Instead, individual nodes will install CorDapps to allow them
-to handle new business processes. CorDapps allow nodes to handle everything from asset trading (see
-:ref:`irs-demo` to portfolio valuations (see :ref:`simm-demo`).
-
-In practical terms, CorDapps give a node's owner the ability to order their node to run new flows that automatically
-negotiate a given ledger update with other nodes on the network. Flows can be started either through HTTP requests or
-direct remote procedure call (RPC) requests
+Each CorDapp allows a node to handle new business processes - everything from asset trading (see :ref:`irs-demo` to
+portfolio valuations (see :ref:`simm-demo`). It does so by defining new flows on the node that can automatically
+negotiate a given ledger update with other nodes on the network. The node's owner can then start these flows as
+required, either through HTTP requests or direct remote procedure call (RPC) requests.
 
 .. image:: resources/node-diagram.png
 
-CorDapps are made up of definitions for the following components:
+CorDapp developers will usually have to define not only these flows, but also any states and contracts that these
+flows use. They will also have to define any web APIs that will run on the node's built-in web server, any static web
+content, and any new services that they want their CorDapp to offer.
+
+This means that CorDapps are made up of definitions for the following components:
 
 * States
 * Contracts
 * Flows
 * Web APIs and static web content
 * Services
-
-As well as a plugin defining how these components interact.

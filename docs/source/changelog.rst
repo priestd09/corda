@@ -494,7 +494,7 @@ New features in this release:
 * Standalone app development:
 
     * The Corda libraries that app developers need to link against can now be installed into your local Maven
-      repository, where they can then be used like any other JAR. See :doc:`creating-a-cordapp`.
+      repository, where they can then be used like any other JAR. See :doc:`running-a-node`.
 
 * User interfaces:
 

@@ -104,7 +104,7 @@ requests or responses with the Corda node.  Here's an example of both ways you c
     :start-after: START 7
     :end-before: END 7
 
-See more on plugins in :doc:`creating-a-cordapp`.
+See more on plugins in :doc:`running-a-node`.
 
 .. warning:: We will be replacing the use of Kryo in the serialization framework and so additional changes here are likely.
 
@@ -162,4 +162,4 @@ With regards to the start flow RPCs, there is an extra layer of security whereby
 annotated with ``@StartableByRPC``. Flows without this annotation cannot execute using RPC.
 
 See more on security in :doc:`secure-coding-guidelines`,  node configuration in :doc:`corda-configuration-file` and
-Cordformation in :doc:`creating-a-cordapp`
+Cordformation in :doc:`running-a-node`.

@@ -1,5 +1,5 @@
-Working with the Corda Demo on Azure Marketplace
-================================================
+Corda Demo on Azure Marketplace
+===============================
 
 Corda ships with a VM image which can be used to deploy a pre-configured virtual machine on the `Microsoft Azure Marketplace <https://azure.microsoft.com/en-gb/overview/what-is-azure>`_
 
