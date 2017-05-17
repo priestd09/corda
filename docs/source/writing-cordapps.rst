@@ -9,12 +9,11 @@ The source-code for a CorDapp is a set of files written in a JVM language that d
 * Web APIs
 * Services
 
-The CorDapp's source folder must also include a ``resources`` folder with two subfolders:
+These files should be placed under ``src/main/[java|kotlin]``. The CorDapp's resources folder (``src/main/resources``)
+should also include the following subfolders:
 
-* ``resources/certificates``, containing the node's certificates
-* ``META-INF/services``, containing a file named ``net.corda.core.node.CordaPluginRegistry``
-
-As well as any required folders of static web content.
+* ``src/main/resources/certificates``, containing the node's certificates
+* ``src/main/resources/META-INF/services``, containing a file named ``net.corda.core.node.CordaPluginRegistry``
 
 For example, the source-code of the `Template CorDapp <https://github.com/corda/cordapp-template>`_ has the following
 structure:
@@ -61,9 +60,8 @@ structure:
 
 Defining a plugin
 -----------------
-Which web APIs and static web content that a CorDapp offers is defined via constructable ``net.corda.core.node
-.CordaPluginRegistry`` subclasses. Each subclass overrides properties of ``CordaPluginRegistry`` to define web APIs
-and static web content that the CorDapp provides:
+You can specify the web APIs and static web content for your CorDapp by subclassing
+``net.corda.core.node.CordaPluginRegistry``:
 
 * The ``webApis`` property is a list of JAX-RS annotated REST access classes. These classes will be constructed by
   the bundled web server and must have a single argument constructor taking a ``CordaRPCOps`` object. This will
@@ -73,25 +71,29 @@ and static web content that the CorDapp provides:
 * The ``staticServeDirs`` property maps static web content to virtual paths and allows simple web demos to be
   distributed within the CorDapp jars. These static serving directories will not be available if the bundled web server
   is not started.
+  * The static web content itself should be placed inside the ``src/main/resources`` directory
 
 * The ``customizeSerialization`` function allows classes to be whitelisted for object serialisation, over and
   above those tagged with the ``@CordaSerializable`` annotation. For instance, new state types will need to be
   explicitly registered. In general, the annotation should be preferred. See :doc:`serialization`.
 
-The fully-qualified class path of each ``CordaPluginRegistry`` subclass must be added to the ``net.corda.core.node
-.CordaPluginRegistry`` file in the CorDapp's ``resources/META-INF/services`` folder. A CorDapp can register
-multiple plugins in a given ``net.corda.core.node.CordaPluginRegistry`` file.
+The fully-qualified class path of each ``CordaPluginRegistry`` subclass must be added to the
+``net.corda.core.node.CordaPluginRegistry`` file in the CorDapp's ``resources/META-INF/services`` folder. A CorDapp
+can register multiple plugins in a given ``net.corda.core.node.CordaPluginRegistry`` file.
 
 Installing apps
 ---------------
-Once a CorDapp has been defined, it is compiled into a self-contained JAR by running the gradle ``jar`` task. The
+Once a CorDapp has been defined, it is compiled into a JAR by running the gradle ``jar`` task. The
 CorDapp JAR is then added to a node by adding it to the node's ``<node_dir>/plugins/`` folder (where ``node_dir`` is
 the folder in which the node's JAR and configuration files are stored).
+
+.. note:: Any external dependencies of your CorDapp will automatically be placed into the
+   ``<node_dir>/dependencies/`` folder. This will be changed in a future release.
 
 .. note:: Building nodes using the gradle ``deployNodes`` task will place the CorDapp JAR into each node's ``plugins``
    folder automatically.
 
-At runtime, nodes will run any plugins present in their ``plugins`` folder.
+At runtime, nodes will load any plugins present in their ``plugins`` folder.
 
 // TODO
 // TODO: Explain how flows and services are registered with annotations based on Shams' work
@@ -106,7 +108,7 @@ The syntax for adding an RPC user is:
 
 .. container:: codeset
 
-    .. sourcecode:: kotlin
+    .. sourcecode:: groovy
 
         rpcUsers=[
             {
@@ -121,7 +123,7 @@ Currently, users need special permissions to start flows via RPC. These permissi
 
 .. container:: codeset
 
-    .. sourcecode:: kotlin
+    .. sourcecode:: groovy
 
         rpcUsers=[
             {
