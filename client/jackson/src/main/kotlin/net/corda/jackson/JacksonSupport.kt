@@ -41,24 +41,28 @@ object JacksonSupport {
         fun partyFromName(partyName: String): Party?
         fun partyFromPrincipal(principal: X500Name): Party?
         fun partyFromKey(owningKey: PublicKey): Party?
+        fun partiesFromName(query: String, exactMatch: Boolean): Set<Party>
     }
 
     class RpcObjectMapper(val rpc: CordaRPCOps, factory: JsonFactory) : PartyObjectMapper, ObjectMapper(factory) {
         override fun partyFromName(partyName: String): Party? = rpc.partyFromName(partyName)
         override fun partyFromPrincipal(principal: X500Name): Party? = rpc.partyFromX500Name(principal)
         override fun partyFromKey(owningKey: PublicKey): Party? = rpc.partyFromKey(owningKey)
+        override fun partiesFromName(query: String, exactMatch: Boolean) = rpc.partiesFromName(query, exactMatch)
     }
 
     class IdentityObjectMapper(val identityService: IdentityService, factory: JsonFactory) : PartyObjectMapper, ObjectMapper(factory) {
         override fun partyFromName(partyName: String): Party? = identityService.partyFromName(partyName)
         override fun partyFromPrincipal(principal: X500Name): Party? = identityService.partyFromX500Name(principal)
         override fun partyFromKey(owningKey: PublicKey): Party? = identityService.partyFromKey(owningKey)
+        override fun partiesFromName(query: String, exactMatch: Boolean) = identityService.partiesFromName(query, exactMatch)
     }
 
     class NoPartyObjectMapper(factory: JsonFactory) : PartyObjectMapper, ObjectMapper(factory) {
         override fun partyFromName(partyName: String): Party? = throw UnsupportedOperationException()
         override fun partyFromPrincipal(principal: X500Name): Party? = throw UnsupportedOperationException()
         override fun partyFromKey(owningKey: PublicKey): Party? = throw UnsupportedOperationException()
+        override fun partiesFromName(query: String, exactMatch: Boolean) = throw UnsupportedOperationException()
     }
 
     val cordaModule: Module by lazy {
@@ -167,10 +171,21 @@ object JacksonSupport {
             // how to parse the content
             return if (parser.text.contains("=")) {
                 val principal = X500Name(parser.text)
-                mapper.partyFromPrincipal(principal) ?: throw JsonParseException(parser, "Could not find a Party with name ${principal}")
+                mapper.partyFromPrincipal(principal) ?: throw JsonParseException(parser, "Could not find a Party with name $principal")
             } else {
-                val key = parsePublicKeyBase58(parser.text)
-                mapper.partyFromKey(key) ?: throw JsonParseException(parser, "Could not find a Party with key ${key.toStringShort()}")
+                val nameMatches = mapper.partiesFromName(parser.text, false)
+                if (nameMatches.isEmpty()) {
+                    val key = try {
+                        parsePublicKeyBase58(parser.text)
+                    } catch (e: Exception) {
+                        throw JsonParseException(parser, "Could not find a matching party for '${parser.text}' and is not a base58 encoded public key")
+                    }
+                    mapper.partyFromKey(key) ?: throw JsonParseException(parser, "Could not find a Party with key ${key.toStringShort()}")
+                } else if (nameMatches.size == 1) {
+                    nameMatches.first()
+                } else {
+                    throw JsonParseException(parser, "Ambiguous name match '${parser.text}': could be any of " + nameMatches.map { it.name }.joinToString(" ... or ..."))
+                }
             }
         }
     }

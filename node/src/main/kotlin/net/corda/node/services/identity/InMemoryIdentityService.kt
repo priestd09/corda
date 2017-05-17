@@ -2,6 +2,7 @@ package net.corda.node.services.identity
 
 import net.corda.core.contracts.PartyAndReference
 import net.corda.core.contracts.requireThat
+import net.corda.core.crypto.commonName
 import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
@@ -17,6 +18,7 @@ import java.security.cert.*
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import javax.annotation.concurrent.ThreadSafe
+import kotlin.collections.ArrayList
 
 /**
  * Simple identity service which caches parties and provides functionality for efficient lookup.
@@ -56,6 +58,23 @@ class InMemoryIdentityService(identities: Iterable<Party> = emptySet(),
     override fun partyFromX500Name(principal: X500Name): Party? = principalToParties[principal]
     override fun partyFromAnonymous(party: AbstractParty): Party? = partyFromKey(party.owningKey)
     override fun partyFromAnonymous(partyRef: PartyAndReference) = partyFromAnonymous(partyRef.party)
+
+    override fun partiesFromName(query: String, exactMatch: Boolean): Set<Party> {
+        val results = HashSet<Party>()
+        for ((x500name, party) in principalToParties) {
+            for (rdn in x500name.rdNs) {
+                val component = rdn.first.value.toString()
+                if (exactMatch && component == query) {
+                    results += party
+                } else if (!exactMatch) {
+                    // We can imagine this being a query over a lucene index in future.
+                    if (component.contains(query, ignoreCase = true))
+                        results += party
+                }
+            }
+        }
+        return results
+    }
 
     @Throws(IdentityService.UnknownAnonymousPartyException::class)
     override fun assertOwnership(party: Party, anonymousParty: AnonymousParty) {

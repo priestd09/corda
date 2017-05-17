@@ -7,6 +7,7 @@ import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.node.services.IdentityService
 import net.corda.core.utilities.ALICE
+import net.corda.core.utilities.ALICE_KEY
 import net.corda.core.utilities.BOB
 import net.corda.node.services.identity.InMemoryIdentityService
 import net.corda.testing.ALICE_PUBKEY
@@ -50,6 +51,18 @@ class InMemoryIdentityServiceTests {
     fun `get identity by name with no registered identities`() {
         val service = InMemoryIdentityService()
         assertNull(service.partyFromX500Name(ALICE.name))
+    }
+
+    @Test
+    fun `get identity by substring match`() {
+        val service = InMemoryIdentityService()
+        service.registerIdentity(ALICE)
+        service.registerIdentity(BOB)
+        val alicente = Party(X500Name("O=Alicente Worldwide,L=London,C=UK"), ALICE_KEY.public)
+        service.registerIdentity(alicente)
+        assertEquals(setOf(ALICE, alicente), service.partiesFromName("Alice", false))
+        assertEquals(setOf(ALICE), service.partiesFromName("Alice Corp", true))
+        assertEquals(setOf(BOB), service.partiesFromName("Bob Plc", true))
     }
 
     @Test

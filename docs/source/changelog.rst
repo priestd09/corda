@@ -42,6 +42,10 @@ UNRELEASED
            use-case.
          * Names of parties are now stored as a ``X500Name`` rather than a ``String``, to correctly enforce basic structure of the
            name. As a result all node legal names must now be structured as X.500 distinguished names.
+         * A new RPC has been added to support fuzzy matching of X.500 names, for instance, to translate from user input to
+           an unambiguous identity by searching the network map.
+         * The JSON parsing code in the ``jackson`` module now uses the fuzzy matching when parsing legal names that do
+           not have an = sign in them. If the match is ambiguous, an exception is thrown.
 
     * There are major changes to the ``KeyManagementService`` and transaction signing in flows:
     
