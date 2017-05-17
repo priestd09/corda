@@ -54,6 +54,7 @@ interface MultilateralNettableState<out T : Any> {
 interface NettableState<N : BilateralNettableState<N>, out T : Any> : BilateralNettableState<N>,
         MultilateralNettableState<T>
 
+// DOCSTART 1
 /**
  * A contract state (or just "state") contains opaque data used by a contract program. It can be thought of as a disk
  * file that the program can use to persist data across transactions. States are immutable: once created they are never
@@ -116,7 +117,9 @@ interface ContractState {
      */
     val participants: List<PublicKey>
 }
+// DOCEND 1
 
+// DOCSTART 4
 /**
  * A wrapper for [ContractState] containing additional platform-level state information.
  * This is the definitive state that is stored on the ledger and used in transaction outputs.
@@ -145,6 +148,7 @@ data class TransactionState<out T : ContractState> @JvmOverloads constructor(
          * otherwise the transaction is not valid.
          */
         val encumbrance: Int? = null)
+// DOCEND 4
 
 /** Wraps the [ContractState] in a [TransactionState] object */
 infix fun <T : ContractState> T.`with notary`(newNotary: Party) = withNotary(newNotary)
@@ -169,6 +173,7 @@ data class Issued<out P : Any>(val issuer: PartyAndReference, val product: P) {
  */
 fun <T : Any> Amount<Issued<T>>.withoutIssuer(): Amount<T> = Amount(quantity, token.product)
 
+// DOCSTART 3
 /**
  * A contract state that can have a single owner.
  */
@@ -179,6 +184,7 @@ interface OwnableState : ContractState {
     /** Copies the underlying data structure, replacing the owner field with this new value and leaving the rest alone */
     fun withNewOwner(newOwner: PublicKey): Pair<CommandData, OwnableState>
 }
+// DOCEND 3
 
 /** Something which is scheduled to happen at a point in time */
 interface Scheduled {
@@ -207,6 +213,7 @@ data class ScheduledStateRef(val ref: StateRef, override val scheduledAt: Instan
  */
 data class ScheduledActivity(val logicRef: FlowLogicRef, override val scheduledAt: Instant) : Scheduled
 
+// DOCSTART 2
 /**
  * A state that evolves by superseding itself, all of which share the common "linearId".
  *
@@ -245,6 +252,7 @@ interface LinearState : ContractState {
         }
     }
 }
+// DOCEND 2
 
 interface SchedulableState : ContractState {
     /**

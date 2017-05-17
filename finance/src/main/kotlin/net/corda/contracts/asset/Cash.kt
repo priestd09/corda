@@ -82,6 +82,7 @@ class Cash : OnLedgerAsset<Currency, Cash.Commands, Cash.State>() {
         class ConserveAmount : AbstractConserveAmount<State, Commands, Currency>()
     }
 
+    // DOCSTART 1
     /** A state representing a cash claim against some party. */
     data class State(
             override val amount: Amount<Issued<Currency>>,
@@ -120,6 +121,7 @@ class Cash : OnLedgerAsset<Currency, Cash.Commands, Cash.State>() {
         /** Object Relational Mapping support. */
         override fun supportedSchemas(): Iterable<MappedSchema> = listOf(CashSchemaV1)
     }
+    // DOCEND 1
 
     // Just for grouping
     interface Commands : FungibleAsset.Commands {
