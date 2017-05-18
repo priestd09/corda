@@ -46,6 +46,7 @@ class ContractUpgradeFlowTest {
         a = nodes.partyNodes[0]
         b = nodes.partyNodes[1]
         notary = nodes.notaryNode.info.notaryIdentity
+
         mockNet.runNetwork()
     }
 

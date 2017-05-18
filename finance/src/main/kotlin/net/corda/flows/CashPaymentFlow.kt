@@ -5,6 +5,7 @@ import net.corda.core.contracts.Amount
 import net.corda.core.contracts.InsufficientBalanceException
 import net.corda.core.contracts.TransactionType
 import net.corda.core.flows.StartableByRPC
+import net.corda.core.flows.TxKeyFlow
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
@@ -29,6 +30,10 @@ open class CashPaymentFlow(
 
     @Suspendable
     override fun call(): SignedTransaction {
+        val revocationEnabled = false
+        progressTracker.currentStep = GENERATING_ID
+        val txIdentities = subFlow(TxKeyFlow.Requester(recipient, revocationEnabled))
+        val anonymousRecipient = txIdentities[recipient]!!.identity
         progressTracker.currentStep = GENERATING_TX
         val builder: TransactionBuilder = TransactionType.General.Builder(null)
         // TODO: Have some way of restricting this to states the caller controls
@@ -36,8 +41,7 @@ open class CashPaymentFlow(
             serviceHub.vaultService.generateSpend(
                     builder,
                     amount,
-                    // TODO: Get a transaction key, don't just re-use the owning key
-                    recipient,
+                    anonymousRecipient,
                     issuerConstraint)
         } catch (e: InsufficientBalanceException) {
             throw CashException("Insufficient cash for spend: ${e.message}", e)
