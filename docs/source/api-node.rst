@@ -1,4 +1,6 @@
-Node
-====
+Node interaction
+================
 
-Placeholder.
+Talk about interacting with the node via:
+- RPC
+- web apis
