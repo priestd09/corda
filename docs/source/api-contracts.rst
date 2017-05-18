@@ -7,6 +7,8 @@
 Contracts
 =========
 
+.. note:: Before reading this page, you should be familiar with the key concepts of :doc:`key-concepts-contracts`.
+
 All Corda contracts are JVM classes that implement ``Contract``.
 
 The ``Contract`` interface is defined as follows:

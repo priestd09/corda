@@ -7,10 +7,13 @@
 Flows
 =====
 
+.. note:: Before reading this page, you should be familiar with the key concepts of :doc:`key-concepts-flows`.
+
 FlowLogic
 ---------
 The concept of a flow is implemented in code as a set of implementations of the abstract ``FlowLogic`` class. Each
-party to the flow will run a flowlogic, and these flowlogics will communicate to handle a specific business process.
+party to the flow will run their own ``FlowLogic``, and these ``FlowLogic``s will communicate to handle a specific
+business process.
 
 Each ``FlowLogic`` implementation must override the ``FlowLogic.call()`` method to describe the actions it will
 take to achieve its role in the flow.
@@ -18,8 +21,8 @@ take to achieve its role in the flow.
 ServiceHub
 ----------
 
-Each flowlogic has access to the node's ``ServiceHub``, giving the CorDapp developer access to the various services
-the node provides.
+Within ``FlowLogic.call()``, the flow developer has access to the node's ``ServiceHub``, giving the CorDapp developer
+access to the various services the node provides.
 
 The key ``ServiceHub`` services are:
 
@@ -45,9 +48,9 @@ Some common tasks performed using the ``ServiceHub`` are:
 * Creating a timestamp using the ``clock``
 * Signing a transaction using the ``keyManagementService``
 
-Communication between flowlogics
---------------------------------
-Flowlogics communicate with counterparties using three functions:
+Communication between flows
+---------------------------
+A ``FlowLogic`` instance communicates with its counterparty ``FlowLogic`` instances using three functions:
 
 * ``FlowLogic.send(otherParty: Party, payload: Any)``
     * Sends the ``payload`` object to the ``otherParty``
@@ -60,16 +63,16 @@ Communication between an initiator node and a counterparty node is established w
 ``FlowLogic`` first calls ``send()``/``sendAndReceive()``:
 
 * A message is sent to the specified counterparty
-* The counterparty examines which flowlogics they have registered to respond to:
+* The counterparty examines which ``FlowLogic`` classes they are registered to respond to:
 
-    a. If the counterparty has registered a flowlogic to respond to the flowlogic sending the
-       message, it starts this flowlogic
-    b. Otherwise, the counterparty will ignore the message
-* The counterparty steps through their flowlogic until they encounter a call to ``receive()``, at which point
-  they process the message from the initiator
+    a. If the counterparty has a ``FlowLogic`` class that is registered to respond to the ``FlowLogic`` class sending
+       the message, it starts an instance of this ``FlowLogic``
+    b. Otherwise, the counterparty ignores the message
+* The counterparty steps through their ``FlowLogic.call()`` logic until they encounter a call to ``receive()``, at
+  which point they process the message from the initiator
 
-A flowlogic is paused upon calling ``receive()``/``sendAndReceive()``. The node will then process other flowlogics
-until a response is received.
+A ``FlowLogic.call()`` is paused upon calling ``receive()``/``sendAndReceive()``. The node will then process the
+logic of other existing ``FlowLogic`` instances until a response is received.
 
 UntrustworthyData
 -----------------
@@ -155,8 +158,7 @@ Suspending flows
 In order for nodes to be able to run multiple flow concurrently, and to allow flows to survive node upgrades and
 restarts, flows need to be suspendable.
 
-This is achieved by marking any function invoked from within a flowlogic's ``call()`` method with an
-``@Suspendable`` annotation.
+This is achieved by marking any function invoked from within ``FlowLogic.call()`` with an ``@Suspendable`` annotation.
 
 We can see an example in ``CollectSignaturesFlow``:
 

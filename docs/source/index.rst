@@ -80,8 +80,6 @@ Documentation Contents:
    api-contracts
    api-transactions
    api-flows
-   api-node
-   api-apis
 
 .. toctree::
    :maxdepth: 1
