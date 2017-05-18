@@ -405,6 +405,7 @@ interface NetCommand : CommandData {
 /** Indicates that this transaction replaces the inputs contract state to another contract state */
 data class UpgradeCommand(val upgradedContractClass: Class<out UpgradedContract<*, *>>) : CommandData
 
+// DOCSTART 6
 /** Wraps an object that was signed by a public key, which may be a well known/recognised institutional key. */
 @CordaSerializable
 data class AuthenticatedObject<out T : Any>(
@@ -413,6 +414,7 @@ data class AuthenticatedObject<out T : Any>(
         val signingParties: List<Party>,
         val value: T
 )
+// DOCEND 6
 
 /**
  * If present in a transaction, contains a time that was verified by the uniqueness service. The true time must be
@@ -432,6 +434,7 @@ data class Timestamp(val after: Instant?, val before: Instant?) {
     val midpoint: Instant get() = after!! + Duration.between(after, before!!).dividedBy(2)
 }
 
+// DOCSTART 5
 /**
  * Implemented by a program that implements business logic on the shared ledger. All participants run this code for
  * every [LedgerTransaction] they see on the network, for every input and output state. All contracts must accept the
@@ -457,6 +460,7 @@ interface Contract {
      */
     val legalContractReference: SecureHash
 }
+// DOCEND 5
 
 /**
  * Interface which can upgrade state objects issued by a contract to a new state object issued by a different contract.

@@ -55,7 +55,9 @@ class Cash : OnLedgerAsset<Currency, Cash.Commands, Cash.State>() {
      * to evolve without requiring code changes. But creates a risk that users create objects governed by a program
      * that is inconsistent with the legal contract.
      */
+    // DOCSTART 2
     override val legalContractReference: SecureHash = SecureHash.sha256("https://www.big-book-of-banking-law.gov/cash-claims.html")
+    // DOCEND 2
     override fun extractCommands(commands: Collection<AuthenticatedObject<CommandData>>): List<AuthenticatedObject<Cash.Commands>>
             = commands.select<Cash.Commands>()
 

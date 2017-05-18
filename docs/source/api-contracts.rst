@@ -1,4 +1,224 @@
+.. highlight:: kotlin
+.. raw:: html
+
+   <script type="text/javascript" src="_static/jquery.js"></script>
+   <script type="text/javascript" src="_static/codesets.js"></script>
+
 Contracts
 =========
 
-Placeholder.
+All Corda contracts are JVM classes that implement ``Contract``.
+
+The ``Contract`` interface is defined as follows:
+
+.. container:: codeset
+
+    .. literalinclude:: ../../core/src/main/kotlin/net/corda/core/contracts/Structures.kt
+        :language: kotlin
+        :start-after: DOCSTART 5
+        :end-before: DOCEND 5
+
+Where:
+
+* ``verify(tx: TransactionForContract)`` constrains the evolution of the underlying state over time by restricting
+  which transactions are valid
+* ``legalContractReference`` is the hash of the legal prose contract that ``verify`` seeks to express in code
+
+verify()
+--------
+
+``verify()`` is a method that takes a ``TransactionForContract`` as a parameter and either:
+
+* Throws an exception if the transaction is invalid
+* Returns ``void`` (Java)/``Unit`` (Kotlin) if the transaction is valid
+
+``verify()`` is executed in a sandbox. It does not have access to the enclosing scope, and is not able to perform
+functions such as network or I/O. This means that it only has access to the properties defined on
+``TransactionForContract`` when deciding whether a transaction is valid.
+
+The two simplest ``verify`` functions are the one that accepts all transactions:
+
+.. container:: codeset
+
+   .. sourcecode:: kotlin
+
+        override fun verify(tx: TransactionForContract) {
+            // Always accepts!
+        }
+
+   .. sourcecode:: java
+
+        @Override
+        public void verify(TransactionForContract tx) {
+            // Always accepts!
+        }
+
+And the one that rejects all transactions:
+
+.. container:: codeset
+
+   .. sourcecode:: kotlin
+
+        override fun verify(tx: TransactionForContract) {
+            throw IllegalArgumentException("Always rejects!")
+        }
+
+   .. sourcecode:: java
+
+        @Override
+        public void verify(TransactionForContract tx) {
+            throw new IllegalArgumentException("Always rejects!");
+        }
+
+TransactionForContract
+^^^^^^^^^^^^^^^^^^^^^^
+
+The ``TransactionForContract`` object passed into ``verify()`` has the following properties:
+
+.. container:: codeset
+
+    .. literalinclude:: ../../core/src/main/kotlin/net/corda/core/contracts/TransactionVerification.kt
+        :language: kotlin
+        :start-after: DOCSTART 1
+        :end-before: DOCEND 1
+
+Where:
+
+* ``inputs`` is a list of the transaction's inputs
+* ``outputs`` is a list of the transaction's outputs
+* ``attachments`` is a list of the transaction's attachments
+* ``commands`` is a list of the transaction's commands, and their associated signatures
+* ``origHash`` is the transaction's hash
+* ``inputNotary`` is the transaction's notary
+* ``timestamp`` is the transaction's timestamp
+
+This object represents the full set of information available to ``verify()`` to decide whether to accept or reject
+the transaction.
+
+requireThat()
+^^^^^^^^^^^^^
+
+Instead of throwing exceptions manually to reject the transaction, we can use the ``requireThat`` DSL:
+
+.. container:: codeset
+
+   .. sourcecode:: kotlin
+
+        requireThat {
+            "No inputs should be consumed when issuing an X." using (tx.inputs.isEmpty())
+            "Only one output state should be created." using (tx.outputs.size == 1)
+            val out = tx.outputs.single() as XState
+            "The sender and the recipient cannot be the same entity." using (out.sender != out.recipient)
+            "All of the participants must be signers." using (command.signers.containsAll(out.participants))
+            "The X's value must be non-negative." using (out.x.value > 0)
+        }
+
+   .. sourcecode:: java
+
+        requireThat(require -> {
+            require.using("No inputs should be consumed when issuing an X.",  tx.getInputs().isEmpty());
+            require.using("Only one output state should be created.", tx.getOutputs().size() == 1);
+            final XState out = (XState) tx.getOutputs().get(0);
+            require.using("The sender and the recipient cannot be the same entity.", out.getSender() != out.getRecipient());
+            require.using("All of the participants must be signers.", command.getSigners().containsAll(out.getParticipants()));
+            require.using("The X's value must be non-negative.", out.getX().getValue() > 0);
+            return null;
+        });
+
+For each <``String``, ``Boolean``> pair within ``requireThat``, if the boolean condition is false, an
+``IllegalArgumentException`` is thrown with the corresponding string as the exception message. In turn, this
+exception will cause the transaction to be rejected.
+
+Commands
+^^^^^^^^
+
+The list of commands on ``TransactionForContract`` is a list of ``AuthenticatedObject`` instances.
+AuthenticatedObject pairs an object with a set of signatures over that object:
+
+.. container:: codeset
+
+    .. literalinclude:: ../../core/src/main/kotlin/net/corda/core/contracts/Structures.kt
+        :language: kotlin
+        :start-after: DOCSTART 6
+        :end-before: DOCEND 6
+
+Where:
+
+* ``signers`` is the list of each signer's ``PublicKey``
+* ``signingParties`` is the list of the signer's identities, if known
+* ``value`` is the object being signed (a command, in this case)
+
+Extracting commands
+~~~~~~~~~~~~~~~~~~~
+
+You can use the ``requireSingleCommand()`` helper method to extract commands.
+
+``<reified T : CommandData> Collection<AuthenticatedObject<CommandData>>.requireSingleCommand()`` asserts that the
+transaction contains exactly one command of type ``T``, and returns it. If there is not exactly one command of this
+type in the transaction, and exception is thrown, rejecting the transaction.
+
+Here is an example of using ``requireSingleCommand()`` to extract a transaction's command and use it to fork the
+execution of ``verify()``:
+
+.. container:: codeset
+
+   .. sourcecode:: kotlin
+
+        class XContract : Contract {
+            interface Commands : CommandData {
+                class Issue : TypeOnlyCommandData(), Commands
+                class Transfer : TypeOnlyCommandData(), Commands
+            }
+
+            override fun verify(tx: TransactionForContract) {
+                val command = tx.commands.requireSingleCommand<Commands>()
+
+                when (command.value) {
+                    is Commands.Issue -> {
+                        // Issuance verification logic.
+                    }
+                    is Commands.Transfer -> {
+                        // Transfer verification logic.
+                    }
+                }
+            }
+
+            override val legalContractReference: SecureHash = SecureHash.sha256("X contract hash")
+        }
+
+   .. sourcecode:: java
+
+        public class XContract implements Contract {
+            public interface Commands extends CommandData {
+                class Issue extends TypeOnlyCommandData implements Commands {}
+                class Transfer extends TypeOnlyCommandData implements Commands {}
+            }
+
+            @Override
+            public void verify(TransactionForContract tx) {
+                final AuthenticatedObject<Commands> command = requireSingleCommand(tx.getCommands(), Commands.class);
+
+                if (command.getValue() instanceof Commands.Issue) {
+                    // Issuance verification logic.
+                } else if (command.getValue() instanceof Commands.Transfer) {
+                    // Transfer verification logic.
+                }
+            }
+
+            private final SecureHash legalContractReference = SecureHash.sha256("X contract hash");
+            @Override public final SecureHash getLegalContractReference() { return legalContractReference; }
+        }
+
+Legal prose
+-----------
+
+Current, ``legalContractReference`` is simply the SHA-256 hash of a contract:
+
+.. container:: codeset
+
+    .. literalinclude:: ../../finance/src/main/kotlin/net/corda/contracts/asset/Cash.kt
+        :language: kotlin
+        :start-after: DOCSTART 2
+        :end-before: DOCEND 2
+
+In a future release, we will move towards referencing a contract's legal prose by way of attachments instead.
