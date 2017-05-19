@@ -21,7 +21,6 @@ import java.util.*
 
 @JvmOverloads
 fun ServiceHub.fillWithSomeTestDeals(dealIds: List<String>,
-                                     revisions: Int? = 0,
                                      parties: List<AnonymousParty> = emptyList()) : Vault<DealState> {
     val freshKey = keyManagementService.freshKey()
 
