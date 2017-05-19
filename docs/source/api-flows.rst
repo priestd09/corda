@@ -11,18 +11,15 @@ Flows
 
 FlowLogic
 ---------
-The concept of a flow is implemented in code as a set of implementations of the abstract ``FlowLogic`` class. Each
-party to the flow will run their own ``FlowLogic``, and these ``FlowLogic``s will communicate to handle a specific
-business process.
-
-Each ``FlowLogic`` implementation must override the ``FlowLogic.call()`` method to describe the actions it will
-take to achieve its role in the flow.
+A flow is implemented in code as one or more ``FlowLogic`` subclasses that communicate to handle a specific business
+process. Each ``FlowLogic`` subclass must override ``FlowLogic.call()``, which describes the actions it will
+take as part of the flow.
 
 ServiceHub
 ----------
 
-Within ``FlowLogic.call()``, the flow developer has access to the node's ``ServiceHub``, giving the CorDapp developer
-access to the various services the node provides.
+Within ``FlowLogic.call()``, the flow developer has access to the node's ``ServiceHub`` that provides access to the
+various services the node provides.
 
 The key ``ServiceHub`` services are:
 
@@ -41,16 +38,16 @@ The key ``ServiceHub`` services are:
 
 Some common tasks performed using the ``ServiceHub`` are:
 
-* Looking up your own identity or the identity of counterparties using the ``networkMapCache``
-* Identifying the provides of a given service (e.g. a notary service) using the ``networkMapCache``
-* Retrieving states for building a transaction using the ``vaultService``
-* Retrieving attachments and past transactions for building a transaction using the ``storageService``
+* Looking up your own identity or the identity of a counterparty using the ``networkMapCache``
+* Identifying the providers of a given service (e.g. a notary service) using the ``networkMapCache``
+* Retrieving states to use in a transaction using the ``vaultService``
+* Retrieving attachments and past transactions to use in a transaction using the ``storageService``
 * Creating a timestamp using the ``clock``
 * Signing a transaction using the ``keyManagementService``
 
 Communication between flows
 ---------------------------
-A ``FlowLogic`` instance communicates with its counterparty ``FlowLogic`` instances using three functions:
+``FlowLogic`` instances communicate using three functions:
 
 * ``FlowLogic.send(otherParty: Party, payload: Any)``
     * Sends the ``payload`` object to the ``otherParty``
@@ -59,28 +56,27 @@ A ``FlowLogic`` instance communicates with its counterparty ``FlowLogic`` instan
 * ``FlowLogic.sendAndReceive(receiveType: Class<R>, otherParty: Party, payload: Any)``
     * Sends the ``payload`` object to the ``otherParty``, and receives an object of type ``receiveType`` back
 
-Communication between an initiator node and a counterparty node is established when the initiator's
-``FlowLogic`` first calls ``send()``/``sendAndReceive()``:
+Each ``FlowLogic`` subclass can be annotated to respond to messages from a given *counterparty* flow. When a node
+first receives a message from a given ``FlowLogic.call()`` invocation, it responds as follows:
 
-* A message is sent to the specified counterparty
-* The counterparty examines which ``FlowLogic`` classes they are registered to respond to:
+* The node checks whether they have a ``FlowLogic`` subclass that is registered to respond to the ``FlowLogic`` that
+is sending the message:
 
-    a. If the counterparty has a ``FlowLogic`` class that is registered to respond to the ``FlowLogic`` class sending
-       the message, it starts an instance of this ``FlowLogic``
-    b. Otherwise, the counterparty ignores the message
-* The counterparty steps through their ``FlowLogic.call()`` logic until they encounter a call to ``receive()``, at
+    a. If yes, the node starts an instance of this ``FlowLogic`` by invoking ``FlowLogic.call()``
+    b. Otherwise, the node ignores the message
+* The counterparty steps through their ``FlowLogic.call()`` method until they encounter a call to ``receive()``, at
   which point they process the message from the initiator
 
-A ``FlowLogic.call()`` is paused upon calling ``receive()``/``sendAndReceive()``. The node will then process the
+Upon calling ``receive()``/``sendAndReceive()``, the ``FlowLogic`` is paused. The node will then process the
 logic of other existing ``FlowLogic`` instances until a response is received.
 
 UntrustworthyData
 -----------------
 
-``send()`` and ``sendAndReceive()`` return the payload wrapped in an ``UntrustworthyData`` instance. This is a
+``send()`` and ``sendAndReceive()`` return a payload wrapped in an ``UntrustworthyData`` instance. This is a
 reminder that any data received off the wire is untrustworthy and must be verified.
 
-We retrieve the payload from the ``UntrustworthyData`` instance using a lambda:
+We verify the ``UntrustworthyData`` and retrieve its payload using a lambda:
 
 .. container:: codeset
 
@@ -115,8 +111,8 @@ Corda provides a number of built-in flows for handling common tasks. The most im
 * ``ContractUpgradeFlow``, to change a state's contract
 * ``NotaryChangeFlow``, to change a state's notary
 
-These flows are designed to be used as building blocks in your own flows. You do so by making a call to ``FlowLogic
-.subFlow()`` from within ``FlowLogic.call()``. Here is an example from ``TwoPartyDealFlow.kt``:
+These flows are designed to be used as building blocks in your own flows. You do so by calling ``FlowLogic.subFlow()``
+from within ``FlowLogic.call()``. Here is an example from ``TwoPartyDealFlow.kt``:
 
 .. container:: codeset
 
@@ -126,16 +122,16 @@ These flows are designed to be used as building blocks in your own flows. You do
         :end-before: DOCEND 1
         :dedent: 12
 
-In this example, we are invoking ``CollectSignaturesFlow`` and passing it a partially signed transaction. This
-returns a fully-signed version of the same transaction.
+In this example, we are starting a ``CollectSignaturesFlow``, passing in a partially signed transaction, and
+receiving back a fully-signed version of the same transaction.
 
 FlowException
 -------------
-If a node throws an exception while running a flow, counterparties waiting for a message from the node (i.e. as part
-of a ``receive()`` or ``sendAndReceive()`` call) will not be notified.
+If a node throws an exception while running a flow, any counterparties waiting for a message from the node (i.e. as part
+of a call to ``receive()`` or ``sendAndReceive()``) will not be notified.
 
-In some cases, this is desirable behavior. However, if you want to notify any waiting counterparties that you are
-ending the flow, you should throw a ``FlowException``:
+You can notify any waiting counterparties that you have encountered an exception and are having to end the
+flow by throwing a ``FlowException``:
 
 .. container:: codeset
 
@@ -146,7 +142,7 @@ ending the flow, you should throw a ``FlowException``:
 
 The flow framework will automatically propagate the ``FlowException`` back to the waiting counterparties.
 
-You can imagine many scenarios in which throwing a ``FlowException`` would be appropriate:
+There are many scenarios in which throwing a ``FlowException`` would be appropriate:
 
 * A transaction doesn't ``verify()``
 * A transaction's signatures are invalid
@@ -155,8 +151,8 @@ You can imagine many scenarios in which throwing a ``FlowException`` would be ap
 
 Suspending flows
 ----------------
-In order for nodes to be able to run multiple flow concurrently, and to allow flows to survive node upgrades and
-restarts, flows need to be suspendable.
+In order for nodes to be able to run multiple flows concurrently, and to allow flows to survive node upgrades and
+restarts, flows need to be checkpointable and serializable to disk.
 
 This is achieved by marking any function invoked from within ``FlowLogic.call()`` with an ``@Suspendable`` annotation.
 
