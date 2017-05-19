@@ -94,7 +94,7 @@ Documentation Contents:
 
 .. toctree::
    :maxdepth: 1
-   :caption: Corda network
+   :caption: Corda networks
 
    setting-up-a-corda-network
    permissioning
