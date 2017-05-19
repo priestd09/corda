@@ -83,23 +83,22 @@ Documentation Contents:
 
 .. toctree::
    :maxdepth: 1
-   :caption: The Corda node
+   :caption: Corda nodes
 
    running-a-node
-   node-services
    clientrpc
-   vault
-   versioning
    shell
-   serialization
-   messaging
-   persistence
    node-administration
    corda-configuration-file
-   node-explorer
-   permissioning
    out-of-process-verification
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Corda network
+
    setting-up-a-corda-network
+   permissioning
+   versioning
 
 .. toctree::
    :maxdepth: 1
@@ -122,12 +121,23 @@ Documentation Contents:
 
 .. toctree::
    :maxdepth: 1
-   :caption: Other
+   :caption: Tools
 
    network-simulator
-   clauses
-   merkle-trees
-   json
+   demobench
+   node-explorer
+   azure-vm
+   loadtesting
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Node internals
+
+   node-services
+   vault
+   serialization
+   messaging
+   persistence
 
 .. toctree::
    :maxdepth: 1
@@ -135,9 +145,9 @@ Documentation Contents:
 
    flow-library
    contract-catalogue
-   contract-irs
    core-types
    financial-model
+   contract-irs
 
 .. toctree::
    :maxdepth: 1
@@ -151,12 +161,12 @@ Documentation Contents:
 
 .. toctree::
    :maxdepth: 1
-   :caption: Appendix
+   :caption: Other
 
-   loadtesting
-   demobench
+   clauses
+   merkle-trees
+   json
    building-the-docs
-   azure-vm
 
 .. toctree::
    :maxdepth: 1

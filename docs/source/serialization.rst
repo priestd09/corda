@@ -1,4 +1,4 @@
-Object Serialization
+Object serialization
 ====================
 
 What is serialization (and deserialization)?
