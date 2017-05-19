@@ -196,7 +196,6 @@ is a three node example;
         networkMap "CN=Controller,O=R3,OU=corda,L=London,C=UK" // The distinguished name of the node named here will be used as the networkMapService.address on all other nodes.
         node {
             name "CN=Controller,O=R3,OU=corda,L=London,C=UK"
-            nearestCity "London"
             advertisedServices = [ "corda.notary.validating" ]
             p2pPort 10002
             rpcPort 10003
@@ -206,7 +205,6 @@ is a three node example;
         }
         node {
             name "CN=NodeA,O=R3,OU=corda,L=London,C=UK"
-            nearestCity "London"
             advertisedServices = []
             p2pPort 10005
             rpcPort 10006
@@ -216,7 +214,6 @@ is a three node example;
         }
         node {
             name "CN=NodeB,O=R3,OU=corda,L=New York,C=US"
-            nearestCity "New York"
             advertisedServices = []
             p2pPort 10008
             rpcPort 10009

@@ -21,20 +21,17 @@ object SingleNotaryCordform : CordformDefinition("build" / "notary-demo-nodes", 
     init {
         node {
             name(ALICE.name.toString())
-            nearestCity("London")
             p2pPort(10002)
             rpcPort(10003)
             rpcUsers = listOf(User("demo", "demo", setOf(startFlowPermission<DummyIssueAndMove>(), startFlowPermission<RPCStartableNotaryFlowClient>())).toMap())
         }
         node {
             name(BOB.name.toString())
-            nearestCity("New York")
             p2pPort(10005)
             rpcPort(10006)
         }
         node {
             name(DUMMY_NOTARY.name.toString())
-            nearestCity("London")
             advertisedServices = listOf(ServiceInfo(ValidatingNotaryService.type).toString())
             p2pPort(10009)
             rpcPort(10010)

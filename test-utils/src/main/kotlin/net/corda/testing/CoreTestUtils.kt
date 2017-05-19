@@ -168,7 +168,6 @@ data class TestNodeConfiguration(
         override val certificateChainCheckPolicies: List<CertChainPolicyConfig> = emptyList(),
         override val verifierType: VerifierType = VerifierType.InMemory,
         override val messageRedeliveryDelaySeconds: Int = 5) : NodeConfiguration {
-    override val nearestCity = myLegalName.getRDNs(BCStyle.L).single().typesAndValues.single().value.toString()
 }
 
 fun testConfiguration(baseDirectory: Path, legalName: X500Name, basePort: Int): FullNodeConfiguration {
@@ -176,7 +175,6 @@ fun testConfiguration(baseDirectory: Path, legalName: X500Name, basePort: Int): 
             basedir = baseDirectory,
             myLegalName = legalName,
             networkMapService = null,
-            nearestCity = "Null Island",
             emailAddress = "",
             keyStorePassword = "cordacadevpass",
             trustStorePassword = "trustpass",

@@ -28,20 +28,17 @@ object RaftNotaryCordform : CordformDefinition("build" / "notary-demo-nodes", no
     init {
         node {
             name(ALICE.name.toString())
-            nearestCity("London")
             p2pPort(10002)
             rpcPort(10003)
             rpcUsers = listOf(User("demo", "demo", setOf(startFlowPermission<DummyIssueAndMove>(), startFlowPermission<RPCStartableNotaryFlowClient>())).toMap())
         }
         node {
             name(BOB.name.toString())
-            nearestCity("New York")
             p2pPort(10005)
             rpcPort(10006)
         }
         node {
             name(notaryNames[0].toString())
-            nearestCity("London")
             advertisedServices = listOf(advertisedNotary.toString())
             p2pPort(10009)
             rpcPort(10010)
@@ -49,7 +46,6 @@ object RaftNotaryCordform : CordformDefinition("build" / "notary-demo-nodes", no
         }
         node {
             name(notaryNames[1].toString())
-            nearestCity("London")
             advertisedServices = listOf(advertisedNotary.toString())
             p2pPort(10013)
             rpcPort(10014)
@@ -58,7 +54,6 @@ object RaftNotaryCordform : CordformDefinition("build" / "notary-demo-nodes", no
         }
         node {
             name(notaryNames[2].toString())
-            nearestCity("London")
             advertisedServices = listOf(advertisedNotary.toString())
             p2pPort(10017)
             rpcPort(10018)

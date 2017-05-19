@@ -24,7 +24,6 @@ interface NodeConfiguration : SSLConfiguration {
     val myLegalName: X500Name
     val networkMapService: NetworkMapInfo?
     val minimumPlatformVersion: Int
-    val nearestCity: String
     val emailAddress: String
     val exportJMXto: String
     val dataSourceProperties: Properties
@@ -43,7 +42,6 @@ data class FullNodeConfiguration(
                 ReplaceWith("baseDirectory"))
         val basedir: Path,
         override val myLegalName: X500Name,
-        override val nearestCity: String,
         override val emailAddress: String,
         override val keyStorePassword: String,
         override val trustStorePassword: String,
