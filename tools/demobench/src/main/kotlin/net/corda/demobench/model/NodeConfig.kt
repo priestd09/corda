@@ -1,7 +1,6 @@
 package net.corda.demobench.model
 
 import com.typesafe.config.*
-import net.corda.core.crypto.location
 import net.corda.core.crypto.locationOrNull
 import net.corda.nodeapi.User
 import org.bouncycastle.asn1.x500.X500Name
