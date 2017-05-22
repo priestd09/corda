@@ -78,8 +78,8 @@ interface DriverDSLExposedInterface : CordformContext {
      * @param advertisedServices The set of services to be advertised by the node. Defaults to empty set.
      * @param verifierType The type of transaction verifier to use. See: [VerifierType]
      * @param rpcUsers List of users who are authorised to use the RPC system. Defaults to empty list.
-     * @param startInProcess Determines if the node should be started inside this process. If null the Driver-level
-     *     value will be used.
+     * @param startInSameProcess Determines if the node should be started inside the same process the Driver is running
+     *     in. If null the Driver-level value will be used.
      * @return The [NodeInfo] of the started up node retrieved from the network map service.
      */
     fun startNode(providedName: X500Name? = null,
@@ -87,11 +87,11 @@ interface DriverDSLExposedInterface : CordformContext {
                   rpcUsers: List<User> = emptyList(),
                   verifierType: VerifierType = VerifierType.InMemory,
                   customOverrides: Map<String, Any?> = emptyMap(),
-                  startInProcess: Boolean? = null): ListenableFuture<out NodeHandle>
+                  startInSameProcess: Boolean? = null): ListenableFuture<out NodeHandle>
 
     fun startNodes(
             nodes: List<CordformNode>,
-            startInProcess: Boolean? = null
+            startInSameProcess: Boolean? = null
     ): List<ListenableFuture<out NodeHandle>>
 
     /**
@@ -102,8 +102,8 @@ interface DriverDSLExposedInterface : CordformContext {
      * @param type The advertised notary service type. Currently the only supported type is [RaftValidatingNotaryService.type].
      * @param verifierType The type of transaction verifier to use. See: [VerifierType]
      * @param rpcUsers List of users who are authorised to use the RPC system. Defaults to empty list.
-     * @param startInProcess Determines if the nodes should be started inside this process. If null the Driver-level
-     *     value will be used.
+     * @param startInSameProcess Determines if the node should be started inside the same process the Driver is running
+     *     in. If null the Driver-level value will be used.
      * @return The [Party] identity of the distributed notary service, and the [NodeInfo]s of the notaries in the cluster.
      */
     fun startNotaryCluster(
@@ -112,7 +112,7 @@ interface DriverDSLExposedInterface : CordformContext {
             type: ServiceType = RaftValidatingNotaryService.type,
             verifierType: VerifierType = VerifierType.InMemory,
             rpcUsers: List<User> = emptyList(),
-            startInProcess: Boolean? = null): ListenableFuture<Pair<PartyAndCertificate, List<NodeHandle>>>
+            startInSameProcess: Boolean? = null): ListenableFuture<Pair<PartyAndCertificate, List<NodeHandle>>>
 
     /**
      * Starts a web server for a node
@@ -546,7 +546,7 @@ class DriverDSL(
             rpcUsers: List<User>,
             verifierType: VerifierType,
             customOverrides: Map<String, Any?>,
-            startInProcess: Boolean?
+            startInSameProcess: Boolean?
     ): ListenableFuture<out NodeHandle> {
         val p2pAddress = portAllocation.nextHostAndPort()
         val rpcAddress = portAllocation.nextHostAndPort()
@@ -568,10 +568,10 @@ class DriverDSL(
                         "verifierType" to verifierType.name
                 ) + customOverrides
         )
-        return startNodeInternal(config, webAddress, startInProcess)
+        return startNodeInternal(config, webAddress, startInSameProcess)
     }
 
-    override fun startNodes(nodes: List<CordformNode>, startInProcess: Boolean?): List<ListenableFuture<out NodeHandle>> {
+    override fun startNodes(nodes: List<CordformNode>, startInSameProcess: Boolean?): List<ListenableFuture<out NodeHandle>> {
         val networkMapServiceConfigLookup = networkMapServiceConfigLookup(nodes)
         return nodes.map { node ->
             portAllocation.nextHostAndPort() // rpcAddress
@@ -588,7 +588,7 @@ class DriverDSL(
                             "notaryClusterAddresses" to node.notaryClusterAddresses
                     )
             )
-            startNodeInternal(config, webAddress, startInProcess)
+            startNodeInternal(config, webAddress, startInSameProcess)
         }
     }
 
@@ -598,7 +598,7 @@ class DriverDSL(
             type: ServiceType,
             verifierType: VerifierType,
             rpcUsers: List<User>,
-            startInProcess: Boolean?
+            startInSameProcess: Boolean?
     ): ListenableFuture<Pair<PartyAndCertificate, List<NodeHandle>>> {
         val nodeNames = (0 until clusterSize).map { DUMMY_NOTARY.name.appendToCommonName(" $it") }
         val paths = nodeNames.map { baseDirectory(it) }
@@ -613,7 +613,7 @@ class DriverDSL(
                 rpcUsers = rpcUsers,
                 verifierType = verifierType,
                 customOverrides = mapOf("notaryNodeAddress" to notaryClusterAddress.toString()),
-                startInProcess = startInProcess
+                startInSameProcess = startInSameProcess
         )
         // All other nodes will join the cluster
         val restNotaryFutures = nodeNames.drop(1).map {
