@@ -1,9 +1,6 @@
 package net.corda.core.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import net.corda.core.crypto.CertificateType
-import net.corda.core.crypto.Crypto
-import net.corda.core.crypto.X509Utilities
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.utilities.ProgressTracker
@@ -18,25 +15,6 @@ import java.security.cert.X509Certificate
  */
 object TxKeyFlow {
     abstract class AbstractIdentityFlow(val otherSide: Party, val revocationEnabled: Boolean): FlowLogic<Map<Party, AnonymousIdentity>>() {
-        /**
-         * Generate a new key and corresponding certificate, store the certificate path locally so we
-         * have a copy
-         */
-        fun generateIdentity(): Pair<X509Certificate, CertPath> {
-            val ourPublicKey = serviceHub.keyManagementService.freshKey()
-            val ourParty = Party(serviceHub.myInfo.legalIdentity.name, ourPublicKey)
-            // FIXME: Use the actual certificate for the identity the flow is presenting themselves as
-            // FIXME: Generate EdDSA keys and non-TLS certs
-            val issuerKey = Crypto.generateKeyPair(X509Utilities.DEFAULT_TLS_SIGNATURE_SCHEME)
-            val issuerCertificate = X509Utilities.createSelfSignedCACertificate(ourParty.name, issuerKey)
-            val ourCertificate = X509Utilities.createCertificate(CertificateType.TLS, issuerCertificate, issuerKey, ourParty.name, ourPublicKey)
-            val ourCertPath = X509Utilities.createCertificatePath(issuerCertificate, ourCertificate, revocationEnabled = revocationEnabled)
-            serviceHub.identityService.registerPath(issuerCertificate,
-                    AnonymousParty(ourParty.owningKey),
-                    ourCertPath)
-            return Pair(issuerCertificate, ourCertPath)
-        }
-
         fun validateIdentity(untrustedIdentity: Pair<X509Certificate, CertPath>): AnonymousIdentity {
             val (wellKnownCert, certPath) = untrustedIdentity
             val theirCert = certPath.certificates.last()
@@ -71,7 +49,7 @@ object TxKeyFlow {
         @Suspendable
         override fun call(): Map<Party, AnonymousIdentity> {
             progressTracker.currentStep = AWAITING_KEY
-            val myIdentityFragment = generateIdentity()
+            val myIdentityFragment = serviceHub.keyManagementService.freshKeyAndCert(serviceHub.myInfo.legalIdentity, revocationEnabled)
             val theirIdentity = receive<Pair<X509Certificate, CertPath>>(otherSide).unwrap { validateIdentity(it) }
             send(otherSide, myIdentityFragment)
             return mapOf(Pair(otherSide, AnonymousIdentity(myIdentityFragment)),
@@ -98,7 +76,7 @@ object TxKeyFlow {
         @Suspendable
         override fun call(): Map<Party, AnonymousIdentity> {
             progressTracker.currentStep = SENDING_KEY
-            val myIdentityFragment = generateIdentity()
+            val myIdentityFragment = serviceHub.keyManagementService.freshKeyAndCert(serviceHub.myInfo.legalIdentity, revocationEnabled)
             send(otherSide, myIdentityFragment)
             val theirIdentity = receive<Pair<X509Certificate, CertPath>>(otherSide).unwrap { validateIdentity(it) }
             return mapOf(Pair(otherSide, AnonymousIdentity(myIdentityFragment)),
