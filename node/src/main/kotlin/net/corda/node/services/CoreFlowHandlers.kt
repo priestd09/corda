@@ -125,9 +125,9 @@ class ContractUpgradeHandler(otherSide: Party) : AbstractStateReplacementFlow.Ac
     }
 }
 
-class TxKeyRequestHandler(val otherSide: Party) : FlowLogic<CertPath>() {
+class TxKeyRequestHandler(val otherSide: Party) : FlowLogic<Map<Party, TxKeyFlow.AnonymousIdentity>>() {
     @Suspendable
-    override fun call(): CertPath {
+    override fun call(): Map<Party, TxKeyFlow.AnonymousIdentity> {
         val revocationEnabled = false
         return subFlow(TxKeyFlow.Provider(otherSide, revocationEnabled))
     }
