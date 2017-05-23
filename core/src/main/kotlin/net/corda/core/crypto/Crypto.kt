@@ -548,6 +548,7 @@ object Crypto {
             throw IllegalArgumentException("Unsupported key/algorithm for schemeCodeName: ${signatureScheme.schemeCodeName}")
         when (signatureScheme) {
             ECDSA_SECP256R1_SHA256, ECDSA_SECP256K1_SHA256 -> return deterministicKeyPairECDSA(signatureScheme.algSpec as ECParameterSpec, privateKey, seed)
+            EDDSA_ED25519_SHA512 -> return deterministicKeyPairEdDSA(privateKey, seed)
         }
         throw UnsupportedOperationException("Deterministic key generation is not currently supported for ${signatureScheme.schemeCodeName}")
     }
@@ -575,12 +576,12 @@ object Crypto {
 
         // calculate value d for private key.
         val deterministicD = BigInteger(1, macBytes).mod(parameterSpec.n)
-        if (deterministicD.compareTo(ECConstants.TWO) < 0
+        if (deterministicD < ECConstants.TWO
                 || WNafUtil.getNafWeight(deterministicD) < parameterSpec.n.bitLength().ushr(2)) {
             throw InvalidKeyException("Cannot generate key for this seed, please use another seed value")
         }
         val privateKeySpec = ECPrivateKeySpec(deterministicD, parameterSpec)
-        val privateKey = BCECPrivateKey(privateKey.algorithm, privateKeySpec, BouncyCastleProvider.CONFIGURATION)
+        val privateKeyD = BCECPrivateKey(privateKey.algorithm, privateKeySpec, BouncyCastleProvider.CONFIGURATION)
 
         // compute the public key by scalar multiplication.
         val pointQ = FixedPointCombMultiplier().multiply(parameterSpec.g, deterministicD)
@@ -588,9 +589,25 @@ object Crypto {
         if (pointQ.isInfinity)
             throw InvalidKeyException("Cannot generate key for this seed, please use another seed value")
         val publicKeySpec = ECPublicKeySpec(pointQ, parameterSpec)
-        val publicKey = BCECPublicKey(privateKey.algorithm, publicKeySpec, BouncyCastleProvider.CONFIGURATION)
+        val publicKeyD = BCECPublicKey(privateKey.algorithm, publicKeySpec, BouncyCastleProvider.CONFIGURATION)
 
-        return KeyPair(publicKey, privateKey)
+        return KeyPair(publicKeyD, privateKeyD)
+    }
+
+    // Deterministically generate an EdDSA key.
+    private fun deterministicKeyPairEdDSA(privateKey: PrivateKey, seed: ByteArray): KeyPair {
+        // compute hmac(privateKey, seed).
+        val mac = Mac.getInstance("HmacSHA512", providerMap[BouncyCastleProvider.PROVIDER_NAME])
+        val key = SecretKeySpec((privateKey as EdDSAPrivateKey).geta(), "HmacSHA512")
+        mac.init(key)
+        val macBytes = mac.doFinal(seed)
+
+        // calculate key pair.
+        val params = EDDSA_ED25519_SHA512.algSpec as EdDSANamedCurveSpec
+        val bytes = macBytes.copyOf(params.curve.field.getb() / 8) // need to pad the entropy to the valid seed length.
+        val privateKeyD = EdDSAPrivateKeySpec(bytes, params)
+        val publicKeyD = EdDSAPublicKeySpec(privateKeyD.a, params)
+        return KeyPair(EdDSAPublicKey(publicKeyD), EdDSAPrivateKey(privateKeyD))
     }
 
     /**
