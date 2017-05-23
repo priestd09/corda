@@ -1,7 +1,7 @@
 Flows
 =====
 
-A flow is a sequence of steps that tells a node how to handle a specific business process, such as issuing an asset or
+A *flow* is a sequence of steps that tells a node how to handle a specific business process, such as issuing an asset or
 settling a trade. Once a given business process has been encapsulated in a flow and installed on the node as part of a
 CorDapp, the node's owner can instruct the node to conduct this business process at any time with a single
 message. All activity on a node, and all inter-node communication, happens in the context of these flows.

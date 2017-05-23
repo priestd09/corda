@@ -30,6 +30,10 @@ To be tracked by the node's vault, a state must implement one of:
 * ``LinearState``, which represents facts that evolve over time
 * ``OwnableState``, which represents fungible assets
 
+We can picture this as follows:
+
+.. image:: resources/state-hierarchy.png
+
 Both interfaces provide a way for the node's vault to ascertain whether the state is relevant to it (and therefore worth
 tracking) or not.
 

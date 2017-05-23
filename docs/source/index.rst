@@ -56,12 +56,15 @@ Documentation Contents:
 
    key-concepts
    key-concepts-ecosystem
-   key-concepts-data-model
+   key-concepts-ledger
    key-concepts-states
    key-concepts-transactions
    key-concepts-contracts
    key-concepts-flows
    key-concepts-consensus
+   key-concepts-notaries
+   key-concepts-oracles
+   key-concepts-tradeoffs
 
 .. toctree::
    :maxdepth: 1

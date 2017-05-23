@@ -641,7 +641,7 @@ any ``StateAndRef`` (input), ``ContractState`` (output) or ``Command`` objects a
 for you.
 
 There's one final thing to be aware of: we ask the caller to select a *notary* that controls this state and
-prevents it from being double spent. You can learn more about this topic in the :doc:`key-concepts-consensus` article.
+prevents it from being double spent. You can learn more about this topic in the :doc:`key-concepts-notaries` article.
 
 .. note:: For now, don't worry about how to pick a notary. More infrastructure will come later to automate this
    decision for you.

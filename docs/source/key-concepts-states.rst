@@ -1,8 +1,9 @@
 States
 ======
 
-A state represents a fact known by one or more Corda nodes at a fixed point in time. States can contain arbitrary data,
-allowing them to represent facts of any kind (e.g. stocks, bonds, loans, KYC data, identity information...).
+A *state* is an immutable object representing a fact known by one or more Corda nodes at a specific point in time.
+States can contain arbitrary data, allowing them to represent facts of any kind (e.g. stocks, bonds, loans, KYC data,
+ identity information...).
 
 For example, the following state represents an IOU:
 
@@ -15,8 +16,7 @@ the evolution of the shared fact over time. We discuss contracts in :doc:`key-co
 
 State sequences
 ---------------
-
-In Corda, states are immutable: their attributes cannot be modified directly.
+Since states are immutable, their attributes cannot be modified directly.
 
 Instead, the lifecycle of a shared fact over time is represented by a **state sequence**. When a shared fact needs to
 be updated, we create a new version of the state representing the current situation, and mark the existing state as
@@ -29,9 +29,8 @@ time. We can picture this as follows:
 
 The vault
 ---------
-
-Each node on the network maintains a **vault** where they track all the current and historic states that they
-are aware of, and which are relevant to them:
+Each node on the network maintains a *vault* - a database where the node tracks all the current and historic states
+that it is aware of, and which it considers to be relevant:
 
 .. image:: resources/vault-simple.png
 

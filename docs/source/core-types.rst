@@ -1,8 +1,9 @@
 Core types
 ==========
 
-Corda provides a large standard library of data types used to represent the :doc:`key-concepts-data-model` previously described.
-In addition, there are a series of helper libraries which provide date manipulation, maths and cryptography functions.
+Corda provides a large standard library of data types used to represent the :doc:`key-concepts-ledger` previously
+described. In addition, there are a series of helper libraries which provide date manipulation, maths and
+cryptography functions.
 
 State and References
 --------------------
@@ -13,7 +14,7 @@ If the state ref has been looked up from storage, you will have a ``StateAndRef`
 
 The ``ContractState`` type is an interface that all states must implement. A ``TransactionState`` is a simple
 container for a ``ContractState`` (the custom data used by a contract program) and additional platform-level state
-information, such as the *notary* pointer (see :doc:`key-concepts-consensus`).
+information, such as the *notary* pointer (see :doc:`key-concepts-notaries`).
 
 A number of interfaces then extend ``ContractState``, representing standardised functionality for common kinds
 of state such as:
@@ -43,7 +44,7 @@ Transaction lifecycle types
 ---------------------------
 
 A ``WireTransaction`` instance contains the core of a transaction without signatures, and with references to attachments
-in place of the attachments themselves (see also :doc:`key-concepts-data-model`). Once signed these are encapsulated in a
+in place of the attachments themselves (see also :doc:`key-concepts-ledger`). Once signed these are encapsulated in a
 ``SignedTransaction`` instance. For processing a transaction (i.e. to verify it) a ``SignedTransaction`` is then converted to a
 ``LedgerTransaction``, which involves verifying the signatures and associating them to the relevant command(s), and
 resolving the attachment references to the attachments. Commands with valid signatures are encapsulated in the
