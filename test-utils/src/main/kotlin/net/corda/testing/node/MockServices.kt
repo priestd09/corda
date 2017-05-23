@@ -48,6 +48,7 @@ import javax.annotation.concurrent.ThreadSafe
  * building chains of transactions and verifying them. It isn't sufficient for testing flows however.
  */
 open class MockServices(val key: KeyPair = generateKeyPair()) : ServiceHub {
+
     override fun recordTransactions(txs: Iterable<SignedTransaction>) {
         txs.forEach {
             storageService.stateMachineRecordedTransactionMapping.addMapping(StateMachineRunId.createRandom(), it.id)
@@ -62,6 +63,7 @@ open class MockServices(val key: KeyPair = generateKeyPair()) : ServiceHub {
     override val keyManagementService: MockKeyManagementService = MockKeyManagementService(key)
 
     override val vaultService: VaultService get() = throw UnsupportedOperationException()
+    override val vaultQueryService: VaultQueryService get() = throw UnsupportedOperationException()
     override val networkMapCache: NetworkMapCache get() = throw UnsupportedOperationException()
     override val clock: Clock get() = Clock.systemUTC()
     override val myInfo: NodeInfo get() = NodeInfo(object : SingleMessageRecipient {}, Party(MEGA_CORP.name, key.public), MOCK_VERSION_INFO.platformVersion)
