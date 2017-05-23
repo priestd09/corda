@@ -26,6 +26,12 @@ import org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKey
 import org.bouncycastle.jcajce.provider.util.AsymmetricKeyInfoConverter
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.bouncycastle.jce.spec.ECParameterSpec
+import org.bouncycastle.jce.spec.ECPrivateKeySpec
+import org.bouncycastle.jce.spec.ECPublicKeySpec
+import org.bouncycastle.math.ec.ECConstants
+import org.bouncycastle.math.ec.FixedPointCombMultiplier
+import org.bouncycastle.math.ec.WNafUtil
 import org.bouncycastle.pkcs.PKCS10CertificationRequest
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder
 import org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider
@@ -44,6 +50,8 @@ import java.security.spec.InvalidKeySpecException
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.util.*
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 /**
  * This object controls and provides the available and supported signature schemes for Corda.
@@ -240,7 +248,7 @@ object Crypto {
     @Throws(IllegalArgumentException::class, InvalidKeySpecException::class)
     fun decodePrivateKey(signatureScheme: SignatureScheme, encodedKey: ByteArray): PrivateKey {
         if (!isSupportedSignatureScheme(signatureScheme))
-            throw IllegalArgumentException("Unsupported key/algorithm for schemeCodeName: $signatureScheme.schemeCodeName")
+            throw IllegalArgumentException("Unsupported key/algorithm for schemeCodeName: ${signatureScheme.schemeCodeName}")
         try {
             return KeyFactory.getInstance(signatureScheme.algorithmName, providerMap[signatureScheme.providerName]).generatePrivate(PKCS8EncodedKeySpec(encodedKey))
         } catch (ikse: InvalidKeySpecException) {
@@ -296,7 +304,7 @@ object Crypto {
     @Throws(IllegalArgumentException::class, InvalidKeySpecException::class)
     fun decodePublicKey(signatureScheme: SignatureScheme, encodedKey: ByteArray): PublicKey {
         if (!isSupportedSignatureScheme(signatureScheme))
-            throw IllegalArgumentException("Unsupported key/algorithm for schemeCodeName: $signatureScheme.schemeCodeName")
+            throw IllegalArgumentException("Unsupported key/algorithm for schemeCodeName: ${signatureScheme.schemeCodeName}")
         try {
             return KeyFactory.getInstance(signatureScheme.algorithmName, providerMap[signatureScheme.providerName]).generatePublic(X509EncodedKeySpec(encodedKey))
         } catch (ikse: InvalidKeySpecException) {
@@ -343,7 +351,7 @@ object Crypto {
     @Throws(IllegalArgumentException::class, InvalidKeyException::class, SignatureException::class)
     fun doSign(signatureScheme: SignatureScheme, privateKey: PrivateKey, clearData: ByteArray): ByteArray {
         if (!isSupportedSignatureScheme(signatureScheme))
-            throw IllegalArgumentException("Unsupported key/algorithm for schemeCodeName: $signatureScheme.schemeCodeName")
+            throw IllegalArgumentException("Unsupported key/algorithm for schemeCodeName: ${signatureScheme.schemeCodeName}")
         val signature = Signature.getInstance(signatureScheme.signatureName, providerMap[signatureScheme.providerName])
         if (clearData.isEmpty()) throw Exception("Signing of an empty array is not permitted!")
         signature.initSign(privateKey)
@@ -423,7 +431,7 @@ object Crypto {
     @Throws(InvalidKeyException::class, SignatureException::class, IllegalArgumentException::class)
     fun doVerify(signatureScheme: SignatureScheme, publicKey: PublicKey, signatureData: ByteArray, clearData: ByteArray): Boolean {
         if (!isSupportedSignatureScheme(signatureScheme))
-            throw IllegalArgumentException("Unsupported key/algorithm for schemeCodeName: $signatureScheme.schemeCodeName")
+            throw IllegalArgumentException("Unsupported key/algorithm for schemeCodeName: ${signatureScheme.schemeCodeName}")
         if (signatureData.isEmpty()) throw IllegalArgumentException("Signature data is empty!")
         if (clearData.isEmpty()) throw IllegalArgumentException("Clear data is empty, nothing to verify!")
         val verificationResult = isValid(signatureScheme, publicKey, signatureData, clearData)
@@ -486,7 +494,7 @@ object Crypto {
     @Throws(SignatureException::class, IllegalArgumentException::class)
     fun isValid(signatureScheme: SignatureScheme, publicKey: PublicKey, signatureData: ByteArray, clearData: ByteArray): Boolean {
         if (!isSupportedSignatureScheme(signatureScheme))
-            throw IllegalArgumentException("Unsupported key/algorithm for schemeCodeName: $signatureScheme.schemeCodeName")
+            throw IllegalArgumentException("Unsupported key/algorithm for schemeCodeName: ${signatureScheme.schemeCodeName}")
         val signature = Signature.getInstance(signatureScheme.signatureName, providerMap[signatureScheme.providerName])
         signature.initVerify(publicKey)
         signature.update(clearData)
@@ -514,7 +522,7 @@ object Crypto {
     @JvmOverloads
     fun generateKeyPair(signatureScheme: SignatureScheme = DEFAULT_SIGNATURE_SCHEME): KeyPair {
         if (!isSupportedSignatureScheme(signatureScheme))
-            throw IllegalArgumentException("Unsupported key/algorithm for schemeCodeName: $signatureScheme.schemeCodeName")
+            throw IllegalArgumentException("Unsupported key/algorithm for schemeCodeName: ${signatureScheme.schemeCodeName}")
         val keyPairGenerator = KeyPairGenerator.getInstance(signatureScheme.algorithmName, providerMap[signatureScheme.providerName])
         if (signatureScheme.algSpec != null)
             keyPairGenerator.initialize(signatureScheme.algSpec, newSecureRandom())
@@ -524,19 +532,81 @@ object Crypto {
     }
 
     /**
+     * Deterministically generate a [KeyPair] using an existing private key and a seed as inputs.
+     * This operation is currently supported for ECDSA secp256r1 (NIST P-256) and secp256k1 curves only.
+     * The algorithm differs from BIP32, as extension chain code is not utilized.
+     * TODO: consider adding an extension part in keys.
+     * @param signatureScheme the [SignatureScheme] of the private key input.
+     * @param privateKey the [PrivateKey] that will be used as key to the HMAC-ed DKG function.
+     * @param seed an extra seed that will be used as value to the underlying HMAC.
+     * @return a new deterministically generated [KeyPair].
+     * @throws IllegalArgumentException if the requested signature scheme is not supported.
+     * @throws UnsupportedOperationException if deterministic key generation is not supported for this particular scheme.
+     */
+    fun deterministicKeyPair(signatureScheme: SignatureScheme, privateKey: PrivateKey, seed: ByteArray): KeyPair {
+        if (!isSupportedSignatureScheme(signatureScheme))
+            throw IllegalArgumentException("Unsupported key/algorithm for schemeCodeName: ${signatureScheme.schemeCodeName}")
+        when (signatureScheme) {
+            ECDSA_SECP256R1_SHA256, ECDSA_SECP256K1_SHA256 -> return deterministicKeyPairECDSA(signatureScheme.algSpec as ECParameterSpec, privateKey, seed)
+        }
+        throw UnsupportedOperationException("Deterministic key generation is not currently supported for ${signatureScheme.schemeCodeName}")
+    }
+
+    /**
+     * Deterministically generate a [KeyPair] using an existing private key and a seed as inputs.
+     * Use this method if the [SignatureScheme] of the private key input is not known.
+     * @param privateKey the [PrivateKey] that will be used as key to the HMAC-ed DKG function.
+     * @param seed an extra seed that will be used as value to the underlying HMAC.
+     * @return a new deterministically generated [KeyPair].
+     * @throws IllegalArgumentException if the requested signature scheme is not supported.
+     * @throws UnsupportedOperationException if deterministic key generation is not supported for this particular scheme.
+     */
+    fun deterministicKeyPair(privateKey: PrivateKey, seed: ByteArray): KeyPair {
+        return deterministicKeyPair(findSignatureScheme(privateKey), privateKey, seed)
+    }
+
+    // Given the domain parameters, this routine generates an ECDSA key pair in accordance with X9.62 section 5.2.1 pages 26, 27.
+    private fun deterministicKeyPairECDSA(parameterSpec: ECParameterSpec, privateKey: PrivateKey, seed: ByteArray): KeyPair {
+        // compute hmac(privateKey, seed).
+        val mac = Mac.getInstance("HmacSHA512", providerMap[BouncyCastleProvider.PROVIDER_NAME])
+        val key = SecretKeySpec((privateKey as BCECPrivateKey).d.toByteArray(), "HmacSHA512")
+        mac.init(key)
+        val macBytes = mac.doFinal(seed)
+
+        // calculate value d for private key.
+        val deterministicD = BigInteger(1, macBytes).mod(parameterSpec.n)
+        if (deterministicD.compareTo(ECConstants.TWO) < 0
+                || WNafUtil.getNafWeight(deterministicD) < parameterSpec.n.bitLength().ushr(2)) {
+            throw InvalidKeyException("Cannot generate key for this seed, please use another seed value")
+        }
+        val privateKeySpec = ECPrivateKeySpec(deterministicD, parameterSpec)
+        val privateKey = BCECPrivateKey(privateKey.algorithm, privateKeySpec, BouncyCastleProvider.CONFIGURATION)
+
+        // compute the public key by scalar multiplication.
+        val pointQ = FixedPointCombMultiplier().multiply(parameterSpec.g, deterministicD)
+        // This is unlikely to happen, but we should check for point at infinity.
+        if (pointQ.isInfinity)
+            throw InvalidKeyException("Cannot generate key for this seed, please use another seed value")
+        val publicKeySpec = ECPublicKeySpec(pointQ, parameterSpec)
+        val publicKey = BCECPublicKey(privateKey.algorithm, publicKeySpec, BouncyCastleProvider.CONFIGURATION)
+
+        return KeyPair(publicKey, privateKey)
+    }
+
+    /**
      * Returns a key pair derived from the given [BigInteger] entropy. This is useful for unit tests
      * and other cases where you want hard-coded private keys.
      * Currently, [EDDSA_ED25519_SHA512] is the sole scheme supported for this operation.
      * @param signatureScheme a supported [SignatureScheme], see [Crypto].
      * @param entropy a [BigInteger] value.
      * @return a new [KeyPair] from an entropy input.
-     * @throws IllegalArgumentException if the requested signature scheme is not supported for KeyPair generation using an entropy input.
+     * @throws IllegalArgumentException if the requested signature scheme is not supported for KeyPair generation using an entropy input.val
      */
     fun generateKeyPairFromEntropy(signatureScheme: SignatureScheme, entropy: BigInteger): KeyPair {
         when (signatureScheme) {
             EDDSA_ED25519_SHA512 -> return generateEdDSAKeyPairFromEntropy(entropy)
         }
-        throw IllegalArgumentException("Unsupported signature scheme for fixed entropy-based key pair generation: $signatureScheme.schemeCodeName")
+        throw IllegalArgumentException("Unsupported signature scheme for fixed entropy-based key pair generation: ${signatureScheme.schemeCodeName}")
     }
 
     /**
@@ -615,7 +685,7 @@ object Crypto {
     @Throws(IllegalArgumentException::class)
     fun publicKeyOnCurve(signatureScheme: SignatureScheme, publicKey: PublicKey): Boolean {
         if (!isSupportedSignatureScheme(signatureScheme))
-            throw IllegalArgumentException("Unsupported signature scheme: $signatureScheme.schemeCodeName")
+            throw IllegalArgumentException("Unsupported signature scheme: ${signatureScheme.schemeCodeName}")
         when (publicKey) {
             is BCECPublicKey -> return (publicKey.parameters == signatureScheme.algSpec && !publicKey.q.isInfinity && publicKey.q.isValid)
             is EdDSAPublicKey -> return (publicKey.params == signatureScheme.algSpec && !isEdDSAPointAtInfinity(publicKey) && publicKey.a.isOnCurve)
@@ -691,4 +761,5 @@ object Crypto {
     fun toSupportedPrivateKey(key: PrivateKey): PrivateKey {
         return Crypto.decodePrivateKey(key.encoded)
     }
+
 }
