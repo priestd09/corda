@@ -576,6 +576,8 @@ object Crypto {
 
         // calculate value d for private key.
         val deterministicD = BigInteger(1, macBytes).mod(parameterSpec.n)
+        // Key generation checks follow the BC logic
+        // @see <a href="https://github.com/bcgit/bc-java/blob/master/core/src/main/java/org/bouncycastle/crypto/generators/ECKeyPairGenerator.java">BC ECKeyPairGenerator</a>
         if (deterministicD < ECConstants.TWO
                 || WNafUtil.getNafWeight(deterministicD) < parameterSpec.n.bitLength().ushr(2)) {
             throw InvalidKeyException("Cannot generate key for this seed, please use another seed value")
@@ -617,7 +619,7 @@ object Crypto {
      * @param signatureScheme a supported [SignatureScheme], see [Crypto].
      * @param entropy a [BigInteger] value.
      * @return a new [KeyPair] from an entropy input.
-     * @throws IllegalArgumentException if the requested signature scheme is not supported for KeyPair generation using an entropy input.val
+     * @throws IllegalArgumentException if the requested signature scheme is not supported for KeyPair generation using an entropy input.
      */
     fun generateKeyPairFromEntropy(signatureScheme: SignatureScheme, entropy: BigInteger): KeyPair {
         when (signatureScheme) {
