@@ -64,6 +64,7 @@ private object WebJarType : JarType("corda-webserver.jar") {
 
 private abstract class JavaCommand(jarName: String, internal val dir: File, debugPort: Int?, internal val nodeName: String, init: MutableList<String>.() -> Unit, args: List<String>) {
     internal val command: List<String> = mutableListOf<String>().apply {
+        // Replace below is to fix an issue with spaces in paths on Windows. Quoting the entire path does not work, only the space or directory within the path.
         add(File(File(System.getProperty("java.home"), "bin"), "java").path.replace(" ", "\" \""))
         //add("java")
         add("-Dname=$nodeName")
