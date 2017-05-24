@@ -2,19 +2,21 @@ package net.corda.node.services.vault
 
 import co.paralleluniverse.fibers.Suspendable
 import co.paralleluniverse.strands.Strand
-import io.requery.Persistable
 import io.requery.PersistenceException
 import io.requery.TransactionIsolation
-import io.requery.kotlin.*
-import io.requery.query.Condition
-import io.requery.query.OrderingExpression
+import io.requery.kotlin.`in`
+import io.requery.kotlin.eq
+import io.requery.kotlin.isNull
+import io.requery.kotlin.notNull
 import io.requery.query.RowExpression
 import net.corda.contracts.asset.Cash
 import net.corda.contracts.asset.OnLedgerAsset
 import net.corda.core.ThreadBox
 import net.corda.core.bufferUntilSubscribed
 import net.corda.core.contracts.*
-import net.corda.core.crypto.*
+import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.containsAny
+import net.corda.core.crypto.toBase58String
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.ServiceHub
@@ -22,8 +24,6 @@ import net.corda.core.node.services.StatesNotAvailableException
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.VaultService
 import net.corda.core.node.services.unconsumedStates
-import net.corda.core.node.services.vault.*
-import net.corda.core.schemas.requery.Requery
 import net.corda.core.serialization.*
 import net.corda.core.tee
 import net.corda.core.transactions.TransactionBuilder
@@ -33,7 +33,10 @@ import net.corda.core.utilities.trace
 import net.corda.node.services.Models
 import net.corda.node.services.database.RequeryConfiguration
 import net.corda.node.services.statemachine.FlowStateMachineImpl
-import net.corda.node.services.vault.schemas.*
+import net.corda.node.services.vault.schemas.VaultCashBalancesEntity
+import net.corda.node.services.vault.schemas.VaultSchema
+import net.corda.node.services.vault.schemas.VaultStatesEntity
+import net.corda.node.services.vault.schemas.VaultTxnNoteEntity
 import net.corda.node.utilities.bufferUntilDatabaseCommit
 import net.corda.node.utilities.wrapWithDatabaseTransaction
 import rx.Observable
