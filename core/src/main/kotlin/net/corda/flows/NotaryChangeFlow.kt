@@ -25,7 +25,7 @@ class NotaryChangeFlow<out T : ContractState>(
         progressTracker: ProgressTracker = tracker())
     : AbstractStateReplacementFlow.Instigator<T, T, Party>(originalState, newNotary, progressTracker) {
 
-    override fun assembleTx(): Pair<SignedTransaction, Iterable<AbstractParty>> {
+    override fun assembleTx(): Pair<SignedTransaction, Iterable<Party>> {
         val state = originalState.state
         val tx = TransactionType.NotaryChange.Builder(originalState.state.notary)
 
@@ -42,7 +42,7 @@ class NotaryChangeFlow<out T : ContractState>(
 
         val stx = serviceHub.signInitialTransaction(tx)
 
-        return Pair(stx, participants)
+        return stx to participants.map(serviceHub.identityService::requirePartyFromAnonymous)
     }
 
     /**

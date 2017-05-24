@@ -17,13 +17,13 @@ import java.security.PublicKey
 object StateRevisionFlow {
     class Requester<T>(curStateRef: StateAndRef<RevisionedState<T>>,
                        updatedData: T) : AbstractStateReplacementFlow.Instigator<RevisionedState<T>, RevisionedState<T>, T>(curStateRef, updatedData) {
-        override fun assembleTx(): Pair<SignedTransaction, List<AbstractParty>> {
+        override fun assembleTx(): Pair<SignedTransaction, List<Party>> {
             val state = originalState.state.data
             val tx = state.generateRevision(originalState.state.notary, originalState, modification)
             tx.setTime(serviceHub.clock.instant(), 30.seconds)
 
             val stx = serviceHub.signInitialTransaction(tx)
-            return Pair(stx, state.participants)
+            return Pair(stx, state.participants.map(serviceHub.identityService::requirePartyFromAnonymous))
         }
     }
 

@@ -9,6 +9,7 @@ import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
@@ -67,7 +68,7 @@ abstract class AbstractStateReplacementFlow {
             val signatures = if (participants == me) {
                 getNotarySignatures(stx)
             } else {
-                collectSignatures((participants - me).map { it.owningKey }, stx)
+                collectSignatures((participants - me), stx)
             }
 
             val finalTx = stx + signatures
@@ -75,13 +76,13 @@ abstract class AbstractStateReplacementFlow {
             return finalTx.tx.outRef(0)
         }
 
-        abstract protected fun assembleTx(): Pair<SignedTransaction, Iterable<AbstractParty>>
+        abstract protected fun assembleTx(): Pair<SignedTransaction, Iterable<Party>>
 
         @Suspendable
-        private fun collectSignatures(participants: Iterable<PublicKey>, stx: SignedTransaction): List<DigitalSignature.WithKey> {
-            val parties = participants.map {
-                val participantNode = serviceHub.networkMapCache.getNodeByLegalIdentityKey(it) ?:
-                        throw IllegalStateException("Participant $it to state $originalState not found on the network")
+        private fun collectSignatures(participants: Iterable<Party>, stx: SignedTransaction): List<DigitalSignature.WithKey> {
+            val parties = participants.map { participant: Party ->
+                val participantNode = serviceHub.networkMapCache.getNodeByLegalIdentity(serviceHub, participant) ?:
+                        throw IllegalStateException("Participant $participant to state $originalState not found on the network")
                 participantNode.legalIdentity
             }
 

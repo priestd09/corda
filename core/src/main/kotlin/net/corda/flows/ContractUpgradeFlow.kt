@@ -4,6 +4,7 @@ import net.corda.core.contracts.*
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import java.security.PublicKey
@@ -58,9 +59,9 @@ class ContractUpgradeFlow<OldState : ContractState, out NewState : ContractState
         }
     }
 
-    override fun assembleTx(): Pair<SignedTransaction, Iterable<AbstractParty>> {
+    override fun assembleTx(): Pair<SignedTransaction, Iterable<Party>> {
         val baseTx = assembleBareTx(originalState, modification)
         val stx = serviceHub.signInitialTransaction(baseTx)
-        return stx to originalState.state.data.participants
+        return stx to originalState.state.data.participants.map(serviceHub.identityService::requirePartyFromAnonymous)
     }
 }
