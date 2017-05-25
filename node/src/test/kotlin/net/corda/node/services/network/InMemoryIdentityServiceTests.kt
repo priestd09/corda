@@ -70,7 +70,6 @@ class InMemoryIdentityServiceTests {
         val rootCertAndKey = X509Utilities.createSelfSignedCACert(ALICE.name)
         val txCertAndKey = X509Utilities.createIntermediateCert(ALICE.name, rootCertAndKey)
         val service = InMemoryIdentityService()
-        val rootKey = rootCertAndKey.keyPair
         // TODO: Generate certificate with an EdDSA key rather than ECDSA
         val identity = Party(rootCertAndKey)
         val txIdentity = AnonymousParty(txCertAndKey.keyPair.public)

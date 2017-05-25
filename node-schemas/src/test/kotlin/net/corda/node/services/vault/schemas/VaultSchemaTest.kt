@@ -24,6 +24,7 @@ import net.corda.core.serialization.serialize
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.utilities.*
 import net.corda.node.services.Models
+import net.corda.node.services.vault.schemas.requery.*
 import org.h2.jdbcx.JdbcDataSource
 import org.junit.After
 import org.junit.Assert

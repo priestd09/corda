@@ -29,7 +29,6 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.security.KeyPair
 import java.security.PrivateKey
@@ -70,10 +69,10 @@ open class MockServices(val key: KeyPair = generateKeyPair()) : ServiceHub {
     override val myInfo: NodeInfo get() = NodeInfo(object : SingleMessageRecipient {}, Party(MEGA_CORP.name, key.public), MOCK_VERSION_INFO.platformVersion)
     override val transactionVerifierService: TransactionVerifierService get() = InMemoryTransactionVerifierService(2)
 
-    fun makeVaultService(dataSourceProps: Properties): VaultService {
+    fun makeVaultService(dataSourceProps: Properties, hibernateConfig: HibernateConfiguration = HibernateConfiguration(NodeSchemaService())): VaultService {
         val vaultService = NodeVaultService(this, dataSourceProps)
         // Vault cash spending requires access to contract_cash_states and their updates
-        HibernateObserver(vaultService.rawUpdates, HibernateConfiguration(NodeSchemaService()))
+        HibernateObserver(vaultService.rawUpdates, hibernateConfig)
         return vaultService
     }
 }
