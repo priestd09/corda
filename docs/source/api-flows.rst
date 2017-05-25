@@ -12,8 +12,75 @@ Flows
 FlowLogic
 ---------
 A flow is implemented in code as one or more ``FlowLogic`` subclasses that communicate to handle a specific business
-process. Each ``FlowLogic`` subclass must override ``FlowLogic.call()``, which describes the actions it will
-take as part of the flow.
+process. Each ``FlowLogic`` subclass must override ``FlowLogic.call()``, which describes the actions it will take as
+part of the flow.
+
+An example flow
+^^^^^^^^^^^^^^^
+As an example, let's design a flow for agreeing a basic ledger update between Alice and Bob. This flow will be
+composed of two flow-logics:
+
+* An ``Initiator`` ``FlowLogic`` subclass, that will initiate the request to update the ledger
+* A ``Responder`` ``FlowLogic`` subclass, that will respond to the request to update the ledger
+
+Initiator
+~~~~~~~~~
+In our flow, the Initiator flowlogic will be doing the majority of the work. We therefore override ``Initiator.call``
+to undertake the following steps:
+
+*Part 1 - Build the transaction*
+
+1. Choose a notary for the transaction
+2. Create a transaction builder
+3. Extract any input states from the vault and add them to the builder
+4. Create any output states and add them to the builder
+5. Add any commands, attachments and timestamps to the builder
+
+*Part 2 - Sign the transaction*
+
+6. Sign the transaction builder
+7. Convert the builder to a signed transaction
+
+*Part 3 - Verify the transaction*
+
+8. Verify the transaction by running its contracts
+
+*Part 4 - Gather the counterparty's signature*
+
+9. Send the transaction to the counterparty
+10. Wait to receive back the counterparty's signature
+11. Add the counterparty's signature to the transaction
+12. Verify the transaction's signatures
+
+*Part 5 - Finalize the transaction*
+
+13. Send the transaction to the notary
+14. Wait to receive back the notarised transaction
+15. Record the transaction locally
+16. Store any relevant states in the vault
+17. Send the transaction to the counterparty for recording
+
+We can visualize the work performed by ``Initiator.call`` as follows:
+
+.. image:: resources/flow-overview.png
+
+Responder
+~~~~~~~~~
+To respond to these actions, we override  ``Responder.call`` to take the following steps:
+
+*Part 1 - Sign the transaction*
+
+1. Receive the transaction from the counterparty
+2. Verify the transaction's existing signatures
+3. Verify the transaction by running its contracts
+4. Generate a signature over the transaction
+5. Send the signature back to the counterparty
+
+*Part 2 - Record the transaction*
+
+6. Receive the notarised transaction from the counterparty
+7. Record the transaction locally
+8. Store any relevant states in the vault
 
 ServiceHub
 ----------

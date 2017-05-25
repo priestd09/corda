@@ -211,6 +211,82 @@ execution of ``verify()``:
             @Override public final SecureHash getLegalContractReference() { return legalContractReference; }
         }
 
+Grouping states
+---------------
+Suppose we have the following transaction, where USD15 is being exchanged for GBP10:
+
+.. image:: resources/ungrouped-tx.png
+
+We can imagine that we would like to verify the USD states and the GBP states separately:
+
+.. image:: resources/grouped-tx.png
+
+``TransactionForContract`` provides a ``groupStates`` method to allow you to group states in this way:
+
+.. container:: codeset
+
+    .. literalinclude:: ../../core/src/main/kotlin/net/corda/core/contracts/TransactionVerification.kt
+       :language: kotlin
+       :start-after: DOCSTART 2
+       :end-before: DOCEND 2
+
+Where ``InOutGroup`` is defined as:
+
+.. container:: codeset
+
+    .. literalinclude:: ../../core/src/main/kotlin/net/corda/core/contracts/TransactionVerification.kt
+       :language: kotlin
+       :start-after: DOCSTART 3
+       :end-before: DOCEND 3
+
+For example, we could group the states in the transaction above by currency (i.e. by ``amount.token``):
+
+.. container:: codeset
+
+   .. sourcecode:: kotlin
+
+        val groups = tx.groupStates(Cash.State::class.java) {
+	        it -> it.amount.token
+	    }
+
+   .. sourcecode:: java
+
+        final List<InOutGroup<Cash.State, Issued<Currency>>> groups = tx.groupStates(
+            Cash.State.class,
+            it -> it.getAmount().getToken()
+        );
+
+This would produce the following InOutGroups:
+
+.. image:: resources/in-out-groups.png
+
+We can now verify these groups individually:
+
+.. container:: codeset
+
+   .. sourcecode:: kotlin
+
+          for ((in_, out, key) in groups) {
+              when (key) {
+                  is GBP -> {
+                      // GBP verification logic.
+                  }
+                  is USD -> {
+                      // USD verification logic.
+                  }
+              }
+          }
+
+   .. sourcecode:: java
+
+        for (InOutGroup group : groups) {
+            if (group.getGroupingKey() == USD) {
+                // USD verification logic.
+            } else if (group.getGroupingKey() == GBP) {
+                // GBP verification logic.
+            }
+        }
+
 Legal prose
 -----------
 

@@ -1,6 +1,12 @@
 Notaries
 ========
 
+.. topic:: Summary
+
+   * *Notaries prevent "double-spends"*
+   * *Notaries may optionally also validate transactions*
+   * *A network can have several notaries, each running a different algorithm*
+
 Notarisation
 ------------
 A *notary* is a service that provides **uniqueness consensus** by attesting that, for a given transaction, it has not

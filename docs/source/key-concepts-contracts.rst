@@ -1,6 +1,12 @@
 Contracts
 =========
 
+.. topic:: Summary
+
+   * *A transaction is verified by running the contract of every input and output state*
+   * *Contracts are written in a Turing-complete programming language*
+   * *Contracts are deterministic and their verification is based on the transaction contents alone*
+
 Transaction verification
 ------------------------
 Recall that a transaction is only valid if it is digitally signed by all required parties. However, even if a

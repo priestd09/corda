@@ -1,6 +1,14 @@
 Transactions
 ============
 
+.. topic:: Summary
+
+   * *Transactions are proposals to update the ledger*
+   * *A transaction proposal will only be committed if:*
+     * *It doesn't contain double-spends*
+     * *It is contractually valid*
+     * *It is signed by the required parties*
+
 *Transactions* are objects that update the ledger by consuming zero or more existing ledger states (the
 *inputs*) and producing zero or more new ledger states (the *outputs*). They represent a single link in the state
 sequences of the previous section.

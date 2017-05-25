@@ -22,9 +22,8 @@ Where:
 * ``contract`` is the ``Contract`` class defining the constraints on the creation and consumption of states of this type
 * ``participants`` is a ``List`` of the ``PublicKey`` of each party involved in this state
 
-ContractState subclasses
-------------------------
-
+ContractState child interfaces
+------------------------------
 To be tracked by the node's vault, a state must implement one of:
 
 * ``LinearState``, which represents facts that evolve over time
@@ -39,7 +38,6 @@ tracking) or not.
 
 LinearState
 ^^^^^^^^^^^
-
 ``LinearState`` models facts that evolve over time. Remember that in Corda, states are immutable and can't be
 updated directly. Instead, we represent an evolving fact as a series of states, where each state is a
 ``LinearState`` and has the same ``linearId``. This allows us to link together the changes to the fact over time.
@@ -67,7 +65,6 @@ states that share a ``linearId``). To update a ``LinearState``, it is first retr
 
 OwnableState
 ^^^^^^^^^^^^
-
 ``OwnableState`` models fungible assets - assets for which it's the quantity held that is important, rather than
 the identity of the individual units.
 
@@ -86,9 +83,17 @@ Where:
   * By default, the node's vault tracks states of which it is the owner
 * ``withNewOwner(newOwner: PublicKey)`` creates an identical copy of the state, only with a new owner
 
+Other interfaces
+^^^^^^^^^^^^^^^^
+``ContractState`` has several more child interfaces that can be implemented:
+
+* ``QueryableState``, which allows the state to be queried in the node's database using SQL (see
+  :doc:`event-scheduling`)
+* ``SchedulableState``, which allows us to schedule future actions for the state (e.g. a coupon on a bond) (see
+  :doc:`persistence`)
+
 User-defined fields
 -------------------
-
 Beyond implementing ``LinearState`` or ``OwnableState``, the definition of the state is up to the CorDapp developer.
 You can define any additional class fields and methods you see fit.
 
@@ -103,7 +108,6 @@ For example, here is a relatively complex state definition, for a state represen
 
 TransactionState
 ----------------
-
 Before a state is stored on the ledger, it must be wrapped in a ``TransactionState``:
 
 .. container:: codeset

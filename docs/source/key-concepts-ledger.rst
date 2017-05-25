@@ -1,6 +1,11 @@
 The ledger
 ==========
 
+.. topic:: Summary
+
+   * *The ledger is subjective from each peer's perspective*
+   * *If two peers share an on-ledger fact, they are guaranteed to always see the same version*
+
 Overview
 --------
 In Corda, there is **no single central store of data**. Instead, each node maintains a separate database of known

@@ -1,6 +1,12 @@
 Tradeoffs
 =========
 
+.. topic:: Summary
+
+   * *Permissioned networks are better suited to financial scenarios*
+   * *Point-to-point communication maintains privacy*
+   * *A UTXO model allows for higher network throughput*
+
 Permissioned vs. permissionless
 -------------------------------
 Traditional blockchain networks are permissionless - parties on the network are anonymous, and can join and leave at

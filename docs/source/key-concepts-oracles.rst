@@ -1,6 +1,12 @@
 Oracles
 =======
 
+.. topic:: Summary
+
+   * *Oracles attest to the truth of a specific fact*
+   * *These facts are included in transactions as commands*
+   * *An oracle then signs the transaction to assert the fact is true*
+
 We can imagine that in some cases, contractual validity may depend on some external piece of data, such as an
 exchange rate. However, contract execution must be deterministic. If the contract gave a different view on the
 contract's validity based on the time of execution or the information source used, disagreements would arise

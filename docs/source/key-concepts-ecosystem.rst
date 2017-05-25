@@ -1,15 +1,21 @@
 The network
 ===========
 
+.. topic:: Summary
+
+   * *A Corda network is a network of nodes running Corda and CorDapps*
+   * *Communication is point-to-point, instead of a global broadcast*
+   * *The network is permissioned, with access controlled by a doorman*
+   * *Nodes are identified on the network by their legal identity*
+
 Network structure
 -----------------
-A Corda network is made up of nodes. Each node is a JVM run-time environment hosting Corda services and
-executing applications (*CorDapps*). Each node stores its data in a local relational database that the node's owner
-can query using SQL.
+A Corda network is an authenticated peer-to-peer network of nodes, where each node is a JVM run-time environment
+hosting Corda services and executing applications known as *CorDapps*. Each node stores its data in a local relational
+database that the node's owner can query using SQL.
 
-The nodes are arranged in an authenticated peer-to-peer network. All communication between nodes is direct.
-This allows all data to be shared on a need-to-know basis only; in Corda, there is **no global broadcast**.
-Messages are encrypted and sent via message queues (using AMQP/1.0 over TLS).
+All communication between nodes is direct. This allows all data to be shared on a need-to-know basis only; in Corda,
+there is **no global broadcast**. Messages are encrypted and sent via message queues (using AMQP/1.0 over TLS).
 
 The doorman
 -----------

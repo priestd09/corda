@@ -60,10 +60,11 @@ Documentation Contents:
    key-concepts-states
    key-concepts-transactions
    key-concepts-contracts
+   key-concepts-oracles
    key-concepts-flows
    key-concepts-consensus
    key-concepts-notaries
-   key-concepts-oracles
+   key-concepts-node
    key-concepts-tradeoffs
 
 .. toctree::

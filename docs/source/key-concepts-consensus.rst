@@ -1,6 +1,14 @@
 Consensus
 =========
 
+.. topic:: Summary
+
+   * *Proposed transactions must achieve validity and uniqueness consensus*
+   * *Validity consensus requires contract acceptance of the transaction and all its dependencies*
+   * *Uniqueness consensus prevents double-spends*
+
+Two types of consensus
+----------------------
 Determining whether a proposed transaction is a valid ledger update involves reaching two types of consensus:
 
 * *Validity consensus*
@@ -47,6 +55,7 @@ This is a problem because, although both transactions will achieve validity cons
 .. image:: resources/uniqueness-consensus.png
 
 To prevent this, a valid transaction proposal must also achieve uniqueness consensus. Uniqueness consensus is
-requirement that none of the inputs to a proposed transaction have been consumed in a previous transaction. If one or
-more of the inputs have already been consumed in a previous transaction, this is known as a *double spend*, and the
-transaction proposal is considered invalid.
+requirement that none of the inputs to a proposed transaction have been consumed in a previous transaction.
+
+If one or more of the inputs have already been consumed in a previous transaction, this is known as a *double spend*,
+and the transaction proposal is considered invalid.
