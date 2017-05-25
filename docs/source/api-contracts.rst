@@ -9,7 +9,7 @@ Contracts
 
 .. note:: Before reading this page, you should be familiar with the key concepts of :doc:`key-concepts-contracts`.
 
-All Corda contracts are JVM classes that implement ``Contract``.
+All Corda contracts are JVM classes that implement ``net.corda.core.contracts.Contract``.
 
 The ``Contract`` interface is defined as follows:
 
@@ -22,21 +22,20 @@ The ``Contract`` interface is defined as follows:
 
 Where:
 
-* ``verify(tx: TransactionForContract)`` constrains the evolution of the underlying state over time by restricting
-  which transactions are valid
+* ``verify(tx: TransactionForContract)`` constrains the evolution of states using this contract by restricting which
+  transactions involving states of this type are valid
 * ``legalContractReference`` is the hash of the legal prose contract that ``verify`` seeks to express in code
 
 verify()
 --------
 
-``verify()`` is a method that takes a ``TransactionForContract`` as a parameter and either:
+``verify()`` is a method that doesn't return anything and takes a ``TransactionForContract`` as a parameter. It
+either throws an exception if the transaction is considered invalid, or returns normally if the transaction is
+considered valid.
 
-* Throws an exception if the transaction is invalid
-* Returns ``void`` (Java)/``Unit`` (Kotlin) if the transaction is valid
-
-``verify()`` is executed in a sandbox. It does not have access to the enclosing scope, and is not able to perform
-functions such as network or I/O. This means that it only has access to the properties defined on
-``TransactionForContract`` when deciding whether a transaction is valid.
+``verify()`` is executed in a sandbox. It does not have access to the enclosing scope, and is not able to access
+the network or perform any other I/O. It only has access to the properties defined on ``TransactionForContract`` when
+ deciding whether a transaction is valid.
 
 The two simplest ``verify`` functions are the one that accepts all transactions:
 
@@ -75,7 +74,8 @@ And the one that rejects all transactions:
 TransactionForContract
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The ``TransactionForContract`` object passed into ``verify()`` has the following properties:
+The ``TransactionForContract`` object passed into ``verify()`` represents the full set of information available to
+``verify()`` when deciding whether to accept or reject the transaction. It has the following properties:
 
 .. container:: codeset
 
@@ -94,13 +94,10 @@ Where:
 * ``inputNotary`` is the transaction's notary
 * ``timestamp`` is the transaction's timestamp
 
-This object represents the full set of information available to ``verify()`` to decide whether to accept or reject
-the transaction.
-
 requireThat()
 ^^^^^^^^^^^^^
 
-Instead of throwing exceptions manually to reject the transaction, we can use the ``requireThat`` DSL:
+Instead of throwing exceptions manually to reject a transaction, we can use the ``requireThat`` DSL:
 
 .. container:: codeset
 
@@ -134,8 +131,8 @@ exception will cause the transaction to be rejected.
 Commands
 ^^^^^^^^
 
-The list of commands on ``TransactionForContract`` is a list of ``AuthenticatedObject`` instances.
-AuthenticatedObject pairs an object with a set of signatures over that object:
+``TransactionForContract`` contains the commands as a list of ``AuthenticatedObject`` instances.
+``AuthenticatedObject`` pairs an object with a set of signatures over that object:
 
 .. container:: codeset
 
@@ -152,14 +149,13 @@ Where:
 
 Extracting commands
 ~~~~~~~~~~~~~~~~~~~
-
 You can use the ``requireSingleCommand()`` helper method to extract commands.
 
-``<reified T : CommandData> Collection<AuthenticatedObject<CommandData>>.requireSingleCommand()`` asserts that the
+``<C : CommandData> Collection<AuthenticatedObject<CommandData>>.requireSingleCommand(klass: Class<C>)`` asserts that the
 transaction contains exactly one command of type ``T``, and returns it. If there is not exactly one command of this
-type in the transaction, and exception is thrown, rejecting the transaction.
+type in the transaction, an exception is thrown, rejecting the transaction.
 
-Here is an example of using ``requireSingleCommand()`` to extract a transaction's command and use it to fork the
+Here is an example of using ``requireSingleCommand()`` to extract a transaction's command and using it to fork the
 execution of ``verify()``:
 
 .. container:: codeset
@@ -213,7 +209,7 @@ execution of ``verify()``:
 
 Grouping states
 ---------------
-Suppose we have the following transaction, where USD15 is being exchanged for GBP10:
+Suppose we have the following transaction, where 15 USD is being exchanged for 10 GBP:
 
 .. image:: resources/ungrouped-tx.png
 
@@ -245,7 +241,7 @@ For example, we could group the states in the transaction above by currency (i.e
 
    .. sourcecode:: kotlin
 
-        val groups = tx.groupStates(Cash.State::class.java) {
+        val groups: List<InOutGroup<Cash.State, Issued<Currency>>> = tx.groupStates(Cash.State::class.java) {
 	        it -> it.amount.token
 	    }
 
@@ -299,4 +295,4 @@ Current, ``legalContractReference`` is simply the SHA-256 hash of a contract:
         :start-after: DOCSTART 2
         :end-before: DOCEND 2
 
-In a future release, we will move towards referencing a contract's legal prose by way of attachments instead.
+In the future, a contract's legal prose will be included as an attachment instead.

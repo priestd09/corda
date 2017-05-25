@@ -157,8 +157,7 @@ Going through the data needed to become a seller, we have:
 
 - ``otherParty: Party`` - the party with which you are trading.
 - ``notaryNode: NodeInfo`` - the entry in the network map for the chosen notary. See ":doc:`key-concepts-notaries`" for
-more
-  information on notaries.
+  more information on notaries.
 - ``assetToSell: StateAndRef<OwnableState>`` - a pointer to the ledger entry that represents the thing being sold.
 - ``price: Amount<Currency>`` - the agreed on price that the asset is being sold for (without an issuer constraint).
 - ``myKeyPair: KeyPair`` - the key pair that controls the asset being sold. It will be used to sign the transaction.

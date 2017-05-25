@@ -19,28 +19,28 @@ The ``ContractState`` interface is defined as follows:
 
 Where:
 
-* ``contract`` is the ``Contract`` class defining the constraints on the creation and consumption of states of this type
+* ``contract`` is the ``Contract`` class defining the constraints on transactions involving states of this type
 * ``participants`` is a ``List`` of the ``PublicKey`` of each party involved in this state
 
-ContractState child interfaces
+ContractState sub-interfaces
 ------------------------------
-To be tracked by the node's vault, a state must implement one of:
+There are two common sub-interfaces of ``ContractState``:
 
 * ``LinearState``, which represents facts that evolve over time
 * ``OwnableState``, which represents fungible assets
 
-We can picture this as follows:
+We can picture the inheritance tree as follows:
 
 .. image:: resources/state-hierarchy.png
 
-Both interfaces provide a way for the node's vault to ascertain whether the state is relevant to it (and therefore worth
-tracking) or not.
+Both interfaces provide a mechanism for the node's vault to ascertain whether the state is relevant to it (and
+therefore worth tracking) or not.
 
 LinearState
 ^^^^^^^^^^^
 ``LinearState`` models facts that evolve over time. Remember that in Corda, states are immutable and can't be
-updated directly. Instead, we represent an evolving fact as a series of states, where each state is a
-``LinearState`` and has the same ``linearId``. This allows us to link together the changes to the fact over time.
+updated directly. Instead, we represent an evolving fact as a sequence of states where every state is a
+``LinearState`` that shares the same ``linearId``.
 
 The ``LinearState`` interface is defined as follows:
 
@@ -54,14 +54,16 @@ The ``LinearState`` interface is defined as follows:
 Where:
 
 * ``linearId`` is a ``UniqueIdentifier`` that:
-  * Allows the various versions of the fact to be linked over time
-  * Allows the state to be referenced in external systems
-* ``isRelevant(ourKeys: Set<PublicKey>)`` checks whether, given a set of keys, this state is relevant and should be
-  tracked by our vault
 
-The vault tracks the head (i.e. the most recent evolution) of each ``LinearState`` chain (i.e. a sequence of
-states that share a ``linearId``). To update a ``LinearState``, it is first retrieved from the vault using its
-``linearId``.
+  * Allows the successive versions of the fact to be linked over time
+  * Provides an external identifier for referencing the state in external systems
+
+* ``isRelevant(ourKeys: Set<PublicKey>)`` checks whether, given a set of keys we hold, this state is relevant and
+  should be tracked by our vault
+
+The vault tracks the head (i.e. the most recent version) of each ``LinearState`` chain (i.e. each sequence of
+states all sharing a ``linearId``). To create a transaction updating a ``LinearState``, we retrieve the state from the
+vault using its ``linearId``.
 
 OwnableState
 ^^^^^^^^^^^^
@@ -80,12 +82,14 @@ The ``OwnableState`` interface is defined as follows:
 Where:
 
 * ``owner`` is the ``PublicKey`` of the asset's owner
-  * By default, the node's vault tracks states of which it is the owner
+
+  * By default, the node's vault will track any ``OwnableState`` of which it is the owner
+
 * ``withNewOwner(newOwner: PublicKey)`` creates an identical copy of the state, only with a new owner
 
 Other interfaces
 ^^^^^^^^^^^^^^^^
-``ContractState`` has several more child interfaces that can be implemented:
+``ContractState`` has several more sub-interfaces that can be implemented:
 
 * ``QueryableState``, which allows the state to be queried in the node's database using SQL (see
   :doc:`event-scheduling`)
@@ -108,7 +112,7 @@ For example, here is a relatively complex state definition, for a state represen
 
 TransactionState
 ----------------
-Before a state is stored on the ledger, it must be wrapped in a ``TransactionState``:
+Before being stored on the ledger, a ``ContractState`` is wrapped in a ``TransactionState``:
 
 .. container:: codeset
 
@@ -121,5 +125,5 @@ Where:
 
 * ``data`` is the state to be stored on-ledger
 * ``notary`` is the notary service for this state
-* ``encumbrance`` points to another state that must also appear as an input in any transaction consuming this
+* ``encumbrance`` points to another state that must also appear as an input to any transaction consuming this
   state

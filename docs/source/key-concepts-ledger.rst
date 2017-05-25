@@ -4,7 +4,7 @@ The ledger
 .. topic:: Summary
 
    * *The ledger is subjective from each peer's perspective*
-   * *If two peers share an on-ledger fact, they are guaranteed to always see the same version*
+   * *Two peers are always guaranteed to see the exact same version of any on-ledger facts they share*
 
 Overview
 --------
@@ -12,7 +12,7 @@ In Corda, there is **no single central store of data**. Instead, each node maint
 facts. As a result, each peer only sees a subset of facts on the ledger, and no peer is aware of the ledger in its
 entirety.
 
-For example, we can imagine a network with five nodes, where each coloured circle represents a shared fact:
+For example, imagine a network with five nodes, where each coloured circle represents a shared fact:
 
 .. image:: resources/ledger-venn.png
 
@@ -23,4 +23,4 @@ in lockstep in the database of every node that is aware of it:
 
 .. image:: resources/ledger-table.png
 
-For example, Alice and Bob will both see the **exact same versions** of shared facts 1 and 7.
+For example, Alice and Bob will both see the **exact same version** of shared facts 1 and 7.

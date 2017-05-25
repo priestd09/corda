@@ -5,84 +5,87 @@ Notaries
 
    * *Notaries prevent "double-spends"*
    * *Notaries may optionally also validate transactions*
-   * *A network can have several notaries, each running a different algorithm*
+   * *A network can have several notaries, each running a different consensus algorithm*
 
 Notarisation
 ------------
-A *notary* is a service that provides **uniqueness consensus** by attesting that, for a given transaction, it has not
-signed another transaction consuming any of the same input states.
+A *notary* is a network service that provides **uniqueness consensus** by attesting that, for a given transaction, it
+has not already signed other transactions that consumes any of the proposed transaction's input states.
 
 Upon being sent asked to notarise a transaction, a notary will either:
 
-* Sign the transaction if it has not already signed another transaction consuming any of the same input states
+* Sign the transaction if it has not already signed other transactions consuming any of the proposed transaction's
+  input states
 * Reject the transaction and flag that a double-spend attempt has occurred otherwise
 
 In doing so, the notary provides the point of finality in the system. Until the notary's signature is obtained, parties
-cannot be sure that an equally valid, but conflicting, transaction will not be regarded the "valid" attempt to spend
-the input states in question. However, after the signature is obtained, the parties know that the transaction's inputs
-had not already been consumed. Hence, notarisation is the point at which we can say finality has occurred.
+cannot be sure that an equally valid, but conflicting, transaction will not be regarded as the "valid" attempt to spend
+a given input state. However, after the notary's signature is obtained, we can be sure that the proposed
+transaction's input states had not already been consumed by a prior transaction. Hence, notarisation is the point
+of finality in the system.
 
 Every state has an appointed notary, and a notary will only notarise a transaction if it is the appointed notary
-for all the input and output states.
+of all the transaction's input states.
 
 Consensus algorithms
 ^^^^^^^^^^^^^^^^^^^^
-Corda has "pluggable" consensus, allowing notaries to choose the preferred trade-offs between privacy, scalability,
-legal-system compatibility and algorithmic agility.
+Corda has "pluggable" consensus, allowing notaries to choose a consensus algorithm based on their requirements in
+terms of privacy, scalability, legal-system compatibility and algorithmic agility.
 
 In particular, notaries may differ in terms of:
 
-* **Structure** - a notary may be a single node, a cluster of mutually-trusting nodes, or a cluster of mutually-distrusting
-  nodes
-* **Uniquness algorithm** - a notary cluster may choose to run a high-speed, high-trust RAFT algorithm, or a low-speed,
-  low-trust BFT algorithm
+* **Structure** - a notary may be a single network node, a cluster of mutually-trusting nodes, or a cluster of
+  mutually-distrusting nodes
+* **Consensus algorithm** - a notary service may choose to run a high-speed, high-trust algorithm such as RAFT, a
+  low-speed, low-trust algorithm such as BFT, or any other consensus algorithm it chooses
 
 Validation
 ^^^^^^^^^^
 A notary service must also decide whether or not to provide **validity consensus** by validating each transaction
-before committing it. This decision involves a trade-off:
+before committing it. In making this decision, they face the following trade-off:
 
-* If a transaction **is not** checked for validity, it opens the platform to "denial of state" attacks, where a node
-  knowingly builds an invalid transaction consuming the states of another nodes and sends the transaction to the
-  notary, causing the states to be marked as consumed.
+* If a transaction **is not** checked for validity, it creates the risk of "denial of state" attacks, where a node
+  knowingly builds an invalid transaction consuming some set of existing states and sends it to the
+  notary, causing the states to be marked as consumed
+
 * If the transaction **is** checked for validity, the notary will need to see the full contents of the transaction and
-  its dependencies. This is a privacy leak.
+  its dependencies. This leaks potentially private data to the notary
 
-In both cases, there are attenuating factors. For the non-validating model, Corda's controlled data distribution model
-means that information on unconsumed states is not widely shared. Additionally, Corda's permissioned network means that
-the notary can store to the identity of the party that created the "denial of state" transaction, allowing the attack
-to be resolved off-ledger.
+There are several further points to keep in mind when evaluating this trade-off. In the case of the non-validating
+model, Corda's controlled data distribution model means that information on unconsumed states is not widely shared.
+Additionally, Corda's permissioned network means that the notary can store to the identity of the party that created
+the "denial of state" transaction, allowing the attack to be resolved off-ledger.
 
-For the validating model, the use of anonymous, freshly-generated public keys instead of identities to identify
-parties in a transaction limit the information the notary sees.
-
-The platform is flexible and currently supports both validating and non-validating notary implementations. Nodes can
-select which one to use based on their privacy requirements.
+In the case of the validating model, the use of anonymous, freshly-generated public keys instead of legal identities to
+identify parties in a transaction limit the information the notary sees.
 
 Multiple notaries
 ^^^^^^^^^^^^^^^^^
 Each Corda network can have multiple notaries, each potentially running a different consensus algorithm. This provides
 several benefits:
 
-* **Privacy** - we can have both validating and non-validating notaries on the same network, allowing nodes to make a
-  choice based on their specific requirements
+* **Privacy** - we can have both validating and non-validating notary services on the same network, each running a
+  different algorithm. This allows nodes to choose the preferred notary on a per-transaction basis
 * **Load balancing** - spreading the transaction load over multiple notaries allows higher transaction throughput for
   the platform overall
 * **Low latency** - latency can be minimised by choosing a notary physically closer to the transacting parties
 
 Changing notaries
 ^^^^^^^^^^^^^^^^^
-A notary will only sign a transaction if it is the appointed notary of all the transaction's input states. However,
-there are several cases in which we may want to change a state's appointed notary, including:
+Remember that a notary will only sign a transaction if it is the appointed notary of all of the transaction's input
+states. However, there are cases in which we may need to change a state's appointed notary. These include:
 
-* A single transaction needs to consume states with different appointed notaries
-* A node would prefer to use a different notary for a given transaction due to privacy or speed concerns
+* When a single transaction needs to consume several states that have different appointed notaries
+* When a node would prefer to use a different notary for a given transaction due to privacy or efficiency concerns
 
-In cases where a transaction involves states controlled by multiple notaries, the states first have to be repointed to
-the same notary. This is achieved using a special type of transaction that takes:
+Before these transactions can be created, the states must first be repointed to all have the same notary. This is
+achieved using a special notary-change transaction that takes:
 
 * A single input state
 * An output state identical to the input state, except that the appointed notary has been changed
+
+The input state's appointed notary will sign the transaction if it doesn't constitute a double-spend, at which point
+a state will enter existence that has all the properties of the old state, but has a different appointed notary.
 
 Timestamping
 ------------
@@ -101,22 +104,21 @@ getting the notary to sign there may be many other steps (e.g. sending the trans
 trade, requesting human sign-off...). Thus the time at which the transaction is sent for notarisation may be quite
 different to the time at which the transaction was created.
 
-For this reason, times in transactions are specified as time *windows*, not absolute times.
-In a distributed system there can never be "true time", only an approximation of it. Time windows can be
-open-ended (i.e. specify only one of "before" and "after") or they can be fully bounded. If a time window needs to
-be converted to an absolute time (e.g. for display purposes), there is a utility method on ``Timestamp`` to
-calculate the mid point.
+For this reason, times in transactions are specified as time *windows*, not absolute times. In a distributed system
+there can never be "true time", only an approximation of it. Time windows can be open-ended (i.e. specify only one of
+"before" and "after") or they can be fully bounded. If a time window needs to be converted to an absolute time (e.g.
+for display purposes), there is a utility method to calculate the mid point.
 
 In this way, we express the idea that the *true value* of the fact "the current time" is actually unknowable. Even when
-both before and after timestamps are included, the transaction could have occurred at any point between those two
+both a before and an after timestamp are included, the transaction could have occurred at any point between those two
 timestamps.
 
 By creating a range that can be either closed or open at one end, we allow all of the following situations to be
 modelled:
 
-* This transaction occurred at some point after the given time (e.g. after a maturity event)
-* This transaction occurred at any time before the given time (e.g. before a bankruptcy event)
-* This transaction occurred at some point roughly around the given time (e.g. on a specific day)
+* A transaction occurring at some point after the given time (e.g. after a maturity event)
+* A transaction occurring at any time before the given time (e.g. before a bankruptcy event)
+* A transaction occurring at some point roughly around the given time (e.g. on a specific day)
 
 .. note:: It is assumed that the time feed for a notary is GPS/NaviStar time as defined by the atomic
    clocks at the US Naval Observatory. This time feed is extremely accurate and available globally for free.

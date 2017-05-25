@@ -1,9 +1,8 @@
 Core types
 ==========
 
-Corda provides a large standard library of data types used to represent the :doc:`key-concepts-ledger` previously
-described. In addition, there are a series of helper libraries which provide date manipulation, maths and
-cryptography functions.
+Corda provides a large standard library of data types used to represent the Corda data model. In addition, there are a
+series of helper libraries which provide date manipulation, maths and cryptography functions.
 
 State and References
 --------------------
@@ -44,11 +43,10 @@ Transaction lifecycle types
 ---------------------------
 
 A ``WireTransaction`` instance contains the core of a transaction without signatures, and with references to attachments
-in place of the attachments themselves (see also :doc:`key-concepts-ledger`). Once signed these are encapsulated in a
-``SignedTransaction`` instance. For processing a transaction (i.e. to verify it) a ``SignedTransaction`` is then converted to a
-``LedgerTransaction``, which involves verifying the signatures and associating them to the relevant command(s), and
-resolving the attachment references to the attachments. Commands with valid signatures are encapsulated in the
-``AuthenticatedObject`` type.
+in place of the attachments themselves. Once signed these are encapsulated in a ``SignedTransaction`` instance. For
+processing a transaction (i.e. to verify it) a ``SignedTransaction`` is then converted to a ``LedgerTransaction``,
+which involves verifying the signatures and associating them to the relevant command(s), and resolving the attachment
+ references to the attachments. Commands with valid signatures are encapsulated in the ``AuthenticatedObject`` type.
 
 .. note:: A ``LedgerTransaction`` has not necessarily had its contract code executed, and thus could be contract-invalid
           (but not signature-invalid). You can use the ``verify`` method as shown below to validate the contracts.

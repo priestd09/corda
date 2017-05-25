@@ -56,7 +56,7 @@ structure:
             └── com
                 └── template
                     └── contract
-                        └── TemplateTests.kt
+                        └── TemplateTests.java
 
 Defining a plugin
 -----------------
@@ -79,13 +79,13 @@ You can specify the web APIs and static web content for your CorDapp by subclass
 
 The fully-qualified class path of each ``CordaPluginRegistry`` subclass must be added to the
 ``net.corda.core.node.CordaPluginRegistry`` file in the CorDapp's ``resources/META-INF/services`` folder. A CorDapp
-can register multiple plugins in a given ``net.corda.core.node.CordaPluginRegistry`` file.
+can register multiple plugins in a single ``net.corda.core.node.CordaPluginRegistry`` file.
 
-Installing apps
----------------
-Once a CorDapp has been defined, it is compiled into a JAR by running the gradle ``jar`` task. The
-CorDapp JAR is then added to a node by adding it to the node's ``<node_dir>/plugins/`` folder (where ``node_dir`` is
-the folder in which the node's JAR and configuration files are stored).
+Installing CorDapps
+-------------------
+To run a CorDapp, its source is compiled into a JAR by running the gradle ``jar`` task. The CorDapp JAR is then added
+to a node by adding it to the node's ``<node_dir>/plugins/`` folder (where ``node_dir`` is the folder in which the
+node's JAR and configuration files are stored).
 
 .. note:: Any external dependencies of your CorDapp will automatically be placed into the
    ``<node_dir>/dependencies/`` folder. This will be changed in a future release.
@@ -94,10 +94,6 @@ the folder in which the node's JAR and configuration files are stored).
    folder automatically.
 
 At runtime, nodes will load any plugins present in their ``plugins`` folder.
-
-// TODO
-// TODO: Explain how flows and services are registered with annotations based on Shams' work
-// TODO
 
 RPC permissions
 ---------------

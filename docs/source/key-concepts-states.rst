@@ -4,12 +4,12 @@ States
 .. topic:: Summary
 
    * *States represent on-ledger facts*
-   * *States evolve by marking the current state as historic and creating an updated state*
-   * *Each node stores relevant states in its vault*
+   * *States are evolved by marking the current state as historic and creating an updated state*
+   * *Each node has a vault where it stores any relevant states to itself*
 
 A *state* is an immutable object representing a fact known by one or more Corda nodes at a specific point in time.
 States can contain arbitrary data, allowing them to represent facts of any kind (e.g. stocks, bonds, loans, KYC data,
- identity information...).
+identity information...).
 
 For example, the following state represents an IOU:
 
@@ -17,28 +17,28 @@ For example, the following state represents an IOU:
 
 Specifically, this state represents an IOU of £10 from Alice to Bob.
 
-As well as any information about the fact itself, the state also contains a reference to the **contract** that governs
-the evolution of the shared fact over time. We discuss contracts in :doc:`key-concepts-contracts`.
+As well as any information about the fact itself, the state also contains a reference to the *contract* that governs
+the evolution of the state over time. We discuss contracts in :doc:`key-concepts-contracts`.
 
 State sequences
 ---------------
-Since states are immutable, their attributes cannot be modified directly.
+As states are immutable, they cannot be modified directly to reflect a change in the state of the world.
 
-Instead, the lifecycle of a shared fact over time is represented by a **state sequence**. When a shared fact needs to
-be updated, we create a new version of the state representing the current situation, and mark the existing state as
+Instead, the lifecycle of a shared fact over time is represented by a **state sequence**. When a state needs to be
+updated, we create a new version of the state representing the new state of the world, and mark the existing state as
 historic.
 
-By linking these updates together in chronological order, we get a full view of the evolution of the shared fact over
-time. We can picture this as follows:
+This sequence of state replacements gives us a full view of the evolution of the shared fact over time. We can
+picture this situation as follows:
 
 .. image:: resources/state-sequence.png
 
 The vault
 ---------
-Each node on the network maintains a *vault* - a database where the node tracks all the current and historic states
-that it is aware of, and which it considers to be relevant:
+Each node on the network maintains a *vault* - a database where it tracks all the current and historic states that it
+is aware of, and which it considers to be relevant to itself:
 
 .. image:: resources/vault-simple.png
 
-We can think of the ledger from each node's point-of-view as the set of all the current (i.e. non-historic) states that
-they are aware of.
+We can think of the ledger from each node's point of view as the set of all the current (i.e. non-historic) states that
+it is aware of.

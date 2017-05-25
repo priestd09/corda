@@ -18,14 +18,14 @@ part of the flow.
 An example flow
 ^^^^^^^^^^^^^^^
 As an example, let's design a flow for agreeing a basic ledger update between Alice and Bob. This flow will be
-composed of two flow-logics:
+composed of two flow classes:
 
 * An ``Initiator`` ``FlowLogic`` subclass, that will initiate the request to update the ledger
 * A ``Responder`` ``FlowLogic`` subclass, that will respond to the request to update the ledger
 
 Initiator
 ~~~~~~~~~
-In our flow, the Initiator flowlogic will be doing the majority of the work. We therefore override ``Initiator.call``
+In our flow, the Initiator flow class will be doing the majority of the work. We therefore override ``Initiator.call``
 to undertake the following steps:
 
 *Part 1 - Build the transaction*
@@ -116,11 +116,11 @@ Communication between flows
 ---------------------------
 ``FlowLogic`` instances communicate using three functions:
 
-* ``FlowLogic.send(otherParty: Party, payload: Any)``
+* ``send(otherParty: Party, payload: Any)``
     * Sends the ``payload`` object to the ``otherParty``
-* ``FlowLogic.receive(receiveType: Class<R>, otherParty: Party)``
+* ``receive(receiveType: Class<R>, otherParty: Party)``
     * Receives an object of type ``receiveType`` from the ``otherParty``
-* ``FlowLogic.sendAndReceive(receiveType: Class<R>, otherParty: Party, payload: Any)``
+* ``sendAndReceive(receiveType: Class<R>, otherParty: Party, payload: Any)``
     * Sends the ``payload`` object to the ``otherParty``, and receives an object of type ``receiveType`` back
 
 Each ``FlowLogic`` subclass can be annotated to respond to messages from a given *counterparty* flow. When a node
@@ -131,11 +131,11 @@ is sending the message:
 
     a. If yes, the node starts an instance of this ``FlowLogic`` by invoking ``FlowLogic.call()``
     b. Otherwise, the node ignores the message
+
 * The counterparty steps through their ``FlowLogic.call()`` method until they encounter a call to ``receive()``, at
   which point they process the message from the initiator
 
-Upon calling ``receive()``/``sendAndReceive()``, the ``FlowLogic`` is paused. The node will then process the
-logic of other existing ``FlowLogic`` instances until a response is received.
+Upon calling ``receive()``/``sendAndReceive()``, the ``FlowLogic`` is suspended until it receives a response.
 
 UntrustworthyData
 -----------------
@@ -143,7 +143,7 @@ UntrustworthyData
 ``send()`` and ``sendAndReceive()`` return a payload wrapped in an ``UntrustworthyData`` instance. This is a
 reminder that any data received off the wire is untrustworthy and must be verified.
 
-We verify the ``UntrustworthyData`` and retrieve its payload using a lambda:
+We verify the ``UntrustworthyData`` and retrieve its payload by calling ``unwrap``:
 
 .. container:: codeset
 
@@ -179,7 +179,7 @@ Corda provides a number of built-in flows for handling common tasks. The most im
 * ``NotaryChangeFlow``, to change a state's notary
 
 These flows are designed to be used as building blocks in your own flows. You do so by calling ``FlowLogic.subFlow()``
-from within ``FlowLogic.call()``. Here is an example from ``TwoPartyDealFlow.kt``:
+from within your flow's ``call()`` method. Here is an example from ``TwoPartyDealFlow.kt``:
 
 .. container:: codeset
 
@@ -194,11 +194,12 @@ receiving back a fully-signed version of the same transaction.
 
 FlowException
 -------------
-If a node throws an exception while running a flow, any counterparties waiting for a message from the node (i.e. as part
-of a call to ``receive()`` or ``sendAndReceive()``) will not be notified.
+Suppose a node throws an exception while running a flow. Any counterparty flows waiting for a message from the node
+(i.e. as part of a call to ``receive()`` or ``sendAndReceive()``) will be notified that the flow has unexpectedly
+ended and will themselves end. However, the exception thrown will not be propagated back to the counterparties.
 
-You can notify any waiting counterparties that you have encountered an exception and are having to end the
-flow by throwing a ``FlowException``:
+If you wish to notify any waiting counterparties of the cause of the exception, you can do so by throwing a
+``FlowException``:
 
 .. container:: codeset
 

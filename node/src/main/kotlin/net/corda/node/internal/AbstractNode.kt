@@ -543,8 +543,7 @@ abstract class AbstractNode(open val configuration: NodeConfiguration,
     }
 
     // TODO: sort out ordering of open & protected modifiers of functions in this class.
-    protected open fun makeVaultService(dataSourceProperties: Properties): VaultService = NodeVaultSfervice(services,
-            dataSourceProperties)
+    protected open fun makeVaultService(dataSourceProperties: Properties): VaultService = NodeVaultService(services, dataSourceProperties)
 
     protected open fun makeSchemaService(): SchemaService = NodeSchemaService()
 

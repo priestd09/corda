@@ -3,21 +3,24 @@ Oracles
 
 .. topic:: Summary
 
-   * *Oracles attest to the truth of a specific fact*
-   * *These facts are included in transactions as commands*
-   * *An oracle then signs the transaction to assert the fact is true*
+   * *A fact can be included in a transaction as part of a command*
+   * *An oracle is a service that will only sign the transaction if the included fact is true*
 
-We can imagine that in some cases, contractual validity may depend on some external piece of data, such as an
-exchange rate. However, contract execution must be deterministic. If the contract gave a different view on the
-contract's validity based on the time of execution or the information source used, disagreements would arise
-regarding the true state of the ledger.
+In many cases, a transaction's contractual validity depends on some external piece of data, such as the current
+exchange rate. However, if we were to let each participant evaluate the transaction's validity based on their own
+view of the current exchange rate, the contract's execution would be non-deterministic: some signers would consider the
+transaction valid, while others would consider it invalid. As a result, disagreements would arise over the true state
+of the ledger.
 
-Corda addresses this using *oracles*. Oracles are network services that, upon request, provide commands encapsulating a
-specific fact (e.g. the exchange rate at time x). The oracle is listed as a required signer on the command they return.
+Corda addresses this issue using *oracles*. Oracles are network services that, upon request, provide commands
+that encapsulate a specific fact (e.g. the exchange rate at time x) and list the oracle as a required signer.
 
-If a node then wishes to use this fact in their transaction, they include it by way of the command provided by the
-oracle, who will then be required to sign the transaction to assert that the fact is true. If they wish to monetize
-their services, oracles may decide to only sign a transaction including a fact that they are attesting to for a fee.
+If a node wishes to use a given fact in a transaction, they request a command asserting this fact from the oracle. If
+the oracle considers the fact to be true, they send back the required command. The node then includes the command in
+their transaction, and the oracle will sign the transaction to assert that the fact is true.
 
-Transaction tear-offs are used to prevent the oracle from seeing unwanted information about the transaction. See
-:doc:`merkle-trees` for further information.
+If they wish to monetize their services, oracles can choose to only sign a transaction and attest to the validity of
+the fact it contains for a fee.
+
+Transaction tear-offs are used to prevent the oracle from seeing information about the transaction that is not
+relevant to them. See :doc:`merkle-trees` for further details.

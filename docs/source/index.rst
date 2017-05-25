@@ -45,7 +45,6 @@ Documentation Contents:
    getting-set-up-fault-finding
    faq
    tutorial-cordapp
-   inthebox
    running-the-demos
    CLI-vs-IDE
    cheat-sheet
@@ -61,9 +60,9 @@ Documentation Contents:
    key-concepts-transactions
    key-concepts-contracts
    key-concepts-oracles
-   key-concepts-flows
    key-concepts-consensus
    key-concepts-notaries
+   key-concepts-flows
    key-concepts-node
    key-concepts-tradeoffs
 
