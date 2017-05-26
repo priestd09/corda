@@ -289,9 +289,9 @@ class CertificateStream(val input: InputStream) {
 data class CertificateAndKeyPair(val certificate: X509Certificate, val keyPair: KeyPair)
 
 enum class CertificateType(val keyUsage: KeyUsage, vararg val purposes: KeyPurposeId, val isCA: Boolean) {
-    ROOT_CA(KeyUsage(KeyUsage.digitalSignature or KeyUsage.keyCertSign or KeyUsage.cRLSign), KeyPurposeId.id_kp_serverAuth, KeyPurposeId.id_kp_clientAuth, KeyPurposeId.anyExtendedKeyUsage, isCA = true),
-    INTERMEDIATE_CA(KeyUsage(KeyUsage.digitalSignature or KeyUsage.keyCertSign or KeyUsage.cRLSign), KeyPurposeId.id_kp_serverAuth, KeyPurposeId.id_kp_clientAuth, KeyPurposeId.anyExtendedKeyUsage, isCA = true),
-    CLIENT_CA(KeyUsage(KeyUsage.digitalSignature or KeyUsage.keyCertSign or KeyUsage.cRLSign), KeyPurposeId.id_kp_serverAuth, KeyPurposeId.id_kp_clientAuth, KeyPurposeId.anyExtendedKeyUsage, isCA = true),
-    TLS(KeyUsage(KeyUsage.digitalSignature or KeyUsage.keyEncipherment or KeyUsage.keyAgreement), KeyPurposeId.id_kp_serverAuth, KeyPurposeId.id_kp_clientAuth, KeyPurposeId.anyExtendedKeyUsage, isCA = false),
-    IDENTITY(KeyUsage(KeyUsage.digitalSignature), KeyPurposeId.id_kp_serverAuth, KeyPurposeId.id_kp_clientAuth, KeyPurposeId.anyExtendedKeyUsage, isCA = false)
+    ROOT_CA(KeyUsage(KeyUsage.digitalSignature or KeyUsage.keyCertSign or KeyUsage.cRLSign), KeyPurposeId.anyExtendedKeyUsage, KeyPurposeId.id_kp_OCSPSigning, isCA = true),
+    INTERMEDIATE_CA(KeyUsage(KeyUsage.digitalSignature or KeyUsage.keyCertSign or KeyUsage.cRLSign), KeyPurposeId.anyExtendedKeyUsage, KeyPurposeId.id_kp_OCSPSigning, isCA = true),
+    CLIENT_CA(KeyUsage(KeyUsage.digitalSignature or KeyUsage.keyCertSign or KeyUsage.cRLSign), KeyPurposeId.anyExtendedKeyUsage, isCA = true),
+    TLS(KeyUsage(KeyUsage.digitalSignature or KeyUsage.keyEncipherment or KeyUsage.keyAgreement), KeyPurposeId.id_kp_serverAuth, KeyPurposeId.id_kp_clientAuth, isCA = false),
+    IDENTITY(KeyUsage(KeyUsage.digitalSignature), KeyPurposeId.id_kp_codeSigning, isCA = false)
 }
