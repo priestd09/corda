@@ -37,7 +37,10 @@ considered valid.
 the network or perform any other I/O. It only has access to the properties defined on ``TransactionForContract`` when
  deciding whether a transaction is valid.
 
-The two simplest ``verify`` functions are the one that accepts all transactions:
+The two simplest ``verify`` functions are the one that accepts all transactions, and the one that rejects all
+transactions.
+
+Here is the ``verify`` that accepts all transactions:
 
 .. container:: codeset
 
@@ -54,7 +57,7 @@ The two simplest ``verify`` functions are the one that accepts all transactions:
             // Always accepts!
         }
 
-And the one that rejects all transactions:
+And here is the ``verify`` that rejects all transactions:
 
 .. container:: codeset
 
@@ -132,7 +135,8 @@ Commands
 ^^^^^^^^
 
 ``TransactionForContract`` contains the commands as a list of ``AuthenticatedObject`` instances.
-``AuthenticatedObject`` pairs an object with a set of signatures over that object:
+``AuthenticatedObject`` pairs an object with a list of signers. In this case, ``AuthenticatedObject`` pairs a command
+ with a list of the entities that are required to sign a transaction where this command is present:
 
 .. container:: codeset
 

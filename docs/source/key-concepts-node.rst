@@ -53,9 +53,8 @@ The node's owner interacts with the node via remote procedure calls (RPC). RPC o
 
 The service hub
 ---------------
-Internally, the node has access to a much richer set of services than are exposed via RPC.
-
-These services are used during flow execution to coordinate ledger updates. The key services provided are:
+Internally, the node has access to a rich set of services that are used during flow execution to coordinate ledger
+updates. The key services provided are:
 
 * Information on other nodes on the network and the services they offer
 * Access to the contents of the vault and the storage service

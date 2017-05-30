@@ -24,8 +24,8 @@ We can picture this situation as follows:
 
 .. image:: resources/tx-validation.png
 
-The contract code can be written in any JVM language. There are few restrictions on using the full capabilities of
-the language when writing the contract constraints, including:
+The contract code can be written in any JVM language, and has access to the full capabilities of the language,
+including:
 
 * Checking the number of inputs, outputs, commands, timestamps, and/or attachments
 * Checking the contents of any of these components
@@ -44,9 +44,11 @@ given transaction. For example, transaction validity cannot depend on the time a
 the amount of information the peer running the contract holds. This is a necessary condition to ensure that all peers
 on the network reach consensus regarding the validity of a given ledger update.
 
-To achieve this, contracts evaluate transactions in a deterministic sandbox. The sandbox disallows sources of
-randomness, such as the current time, random numbers, the filesystem or the internet. The only information available
-to the contract when verifying the transaction is the information included in the transaction itself.
+To achieve this, contracts evaluate transactions in a deterministic sandbox. The sandbox has a whitelist that
+prevents the contract from importing libraries that could be a source of non-determinism. This includes libraries
+that provide the current time, random number generators, libraries that provide filesystem access or networking
+libraries, for example. Ultimately, the only information available to the contract when verifying the transaction is
+the information included in the transaction itself.
 
 Contract limitations
 --------------------

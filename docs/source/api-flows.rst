@@ -64,6 +64,9 @@ We can visualize the work performed by ``Initiator.call`` as follows:
 
 .. image:: resources/flow-overview.png
 
+In practice, parts 2 - 4 should be handled by invoking ``CollectSignaturesFlow`` as a subflow, and part 5 should be
+handled by invoking ``FinalityFlow`` as a subflow (see subflow_ for details).
+
 Responder
 ~~~~~~~~~
 To respond to these actions, we override  ``Responder.call`` to take the following steps:
@@ -82,9 +85,23 @@ To respond to these actions, we override  ``Responder.call`` to take the followi
 7. Record the transaction locally
 8. Store any relevant states in the vault
 
+In practice, part 1 should be handled by invoking ``SignTransactionFlow`` as a subflow. Part 2 will be handled
+automatically by our node when the counterparty invokes ``FinalityFlow``.
+
+Flow automation
+^^^^^^^^^^^^^^^
+In practice, many of the actions in a flow can (and should) be automated using built-in flows called *subflows* (see
+subflow_ for details).
+
+In the example above:
+
+* Parts 2-4 of the Initiator side should be automated by invoking ``CollectSignaturesFlow``
+* Part 5 of the Initiator side should be automated by invoking ``FinalityFlow``
+* Part 1 of the Responder side should be automated by invoking ``SignTransactionFlow``
+* Part 2 of the Responder will be handled automatically when the counterparty invokes ``FinalityFlow``
+
 ServiceHub
 ----------
-
 Within ``FlowLogic.call()``, the flow developer has access to the node's ``ServiceHub`` that provides access to the
 various services the node provides.
 
@@ -112,8 +129,13 @@ Some common tasks performed using the ``ServiceHub`` are:
 * Creating a timestamp using the ``clock``
 * Signing a transaction using the ``keyManagementService``
 
-Communication between flows
----------------------------
+Common flow tasks
+-----------------
+There are a number of common tasks that you will need to perform within ``FlowLogic.call`` in order to agree ledger
+updates. This section details the API for the most common tasks:
+
+Communication between parties
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``FlowLogic`` instances communicate using three functions:
 
 * ``send(otherParty: Party, payload: Any)``
@@ -127,7 +149,7 @@ Each ``FlowLogic`` subclass can be annotated to respond to messages from a given
 first receives a message from a given ``FlowLogic.call()`` invocation, it responds as follows:
 
 * The node checks whether they have a ``FlowLogic`` subclass that is registered to respond to the ``FlowLogic`` that
-is sending the message:
+  is sending the message:
 
     a. If yes, the node starts an instance of this ``FlowLogic`` by invoking ``FlowLogic.call()``
     b. Otherwise, the node ignores the message
@@ -138,8 +160,7 @@ is sending the message:
 Upon calling ``receive()``/``sendAndReceive()``, the ``FlowLogic`` is suspended until it receives a response.
 
 UntrustworthyData
------------------
-
+~~~~~~~~~~~~~~~~~
 ``send()`` and ``sendAndReceive()`` return a payload wrapped in an ``UntrustworthyData`` instance. This is a
 reminder that any data received off the wire is untrustworthy and must be verified.
 
@@ -167,6 +188,128 @@ We verify the ``UntrustworthyData`` and retrieve its payload by calling ``unwrap
                 }
                 return tx;
             });
+
+Retrieving information about other nodes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+We use the network map to retrieve information about other nodes on the network:
+
+.. container:: codeset
+
+   .. sourcecode:: kotlin
+
+        val networkMap = serviceHub.networkMapCache
+
+        val allNodes = networkMap.partyNodes
+        val allNotaryNodes = networkMap.notaryNodes
+        val randomNotaryNode = networkMap.getAnyNotary()
+
+        val alice = networkMap.getNodeByLegalName(X500Name("CN=Alice,O=Alice,L=London,C=UK"))
+        val bob = networkMap.getNodeByLegalIdentityKey(bobsKey)
+
+   .. sourcecode:: java
+
+        final NetworkMapCache networkMap = getServiceHub().getNetworkMapCache();
+
+        final List<NodeInfo> allNodes = networkMap.getPartyNodes();
+        final List<NodeInfo> allNotaryNodes = networkMap.getNotaryNodes();
+        final Party randomNotaryNode = networkMap.getAnyNotary(null);
+
+        final NodeInfo alice = networkMap.getNodeByLegalName(new X500Name("CN=Alice,O=Alice,L=London,C=UK"));
+        final NodeInfo bob = networkMap.getNodeByLegalIdentityKey(bobsKey);
+
+Verifying a transaction
+^^^^^^^^^^^^^^^^^^^^^^^
+We verify a transaction as follows:
+
+* Before verifying a transaction chain, we need to retrieve from the proposer(s) of the transaction any parts of the
+  transaction chain that our node doesn't currently have in its local storage:
+
+.. container:: codeset
+
+   .. sourcecode:: kotlin
+
+        subFlow(ResolveTransactionsFlow(transactionToVerify, partyWithTheFullChain))
+
+   .. sourcecode:: java
+
+        subFlow(new ResolveTransactionsFlow(transactionToVerify, partyWithTheFullChain));
+
+* We then verify the transaction as follows:
+
+.. container:: codeset
+
+   .. sourcecode:: kotlin
+
+        partSignedTx.toWireTransaction().toLedgerTransaction(serviceHub).verify()
+
+   .. sourcecode:: java
+
+        partSignedTx.toWireTransaction().toLedgerTransaction(getServiceHub()).verify();
+
+* We will generally also want to conduct some custom validation of the transaction, beyond what is provided for in the
+  contract:
+
+.. container:: codeset
+
+   .. sourcecode:: kotlin
+
+        val ledgerTransaction = partSignedTx.tx.toLedgerTransaction(serviceHub)
+        val inputStateAndRef = ledgerTransaction.inputs.single()
+        val input = inputStateAndRef.state.data as MyState
+        if (input.value > 1000000) {
+            throw FlowException("Proposed input value too high!")
+        }
+
+   .. sourcecode:: java
+
+        final LedgerTransaction ledgerTransaction = partSignedTx.getTx().toLedgerTransaction(getServiceHub());
+        final StateAndRef inputStateAndRef = ledgerTransaction.getInputs().get(0);
+        final MyState input = (MyState) inputStateAndRef.getState().getData();
+        if (input.getValue() > 1000000) {
+            throw new FlowException("Proposed input value too high!");
+        }
+
+Signing a transaction
+^^^^^^^^^^^^^^^^^^^^^
+We sign a transaction as follows:
+
+* Initially, a ``SignedTransaction`` is generated from a ``TransactionBuilder`` using:
+
+.. container:: codeset
+
+   .. sourcecode:: kotlin
+
+        val partSignedTx = serviceHub.signInitialTransaction(unsignedTx)
+
+   .. sourcecode:: java
+
+        final SignedTransaction partSignedTx = getServiceHub().signInitialTransaction(unsignedTx);
+
+* Once a ``SignedTransaction`` has been created, we add additional signatures using:
+
+.. container:: codeset
+
+   .. sourcecode:: kotlin
+
+        val fullySignedTx = serviceHub.addSignature(partSignedTx)
+
+   .. sourcecode:: java
+
+        SignedTransaction fullySignedTx = getServiceHub().addSignature(partSignedTx);
+
+* We can also generate a signature without adding it to the transaction using:
+
+.. container:: codeset
+
+   .. sourcecode:: kotlin
+
+        val signature = serviceHub.createSignature(partSignedTx)
+
+   .. sourcecode:: java
+
+        DigitalSignature.WithKey signature = getServiceHub().createSignature(partSignedTx);
+
+.. _subflows:
 
 Subflows
 --------
