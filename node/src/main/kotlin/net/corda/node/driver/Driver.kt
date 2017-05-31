@@ -62,6 +62,8 @@ import kotlin.concurrent.thread
  *
  * The process the driver is run in behaves as an Artemis client and starts up other processes. Namely it first
  * bootstraps a network map service to allow the specified nodes to connect to, then starts up the actual nodes.
+ *
+ * TODO this file is getting way too big, it should be split into several files.
  */
 
 private val log: Logger = loggerFor<DriverDSL>()
